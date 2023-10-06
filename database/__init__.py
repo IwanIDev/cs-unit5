@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import sqlite3
 
 
 class Database(ABC):
@@ -13,7 +14,7 @@ class Database(ABC):
 
 class Sqlite3Database(Database):
     def __init__(self):
-        pass  # Create database
+        self.connection = sqlite3.connect("database.db")
 
     def update(self):
         pass  # Insert data into database
