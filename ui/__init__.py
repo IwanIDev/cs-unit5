@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import tkinter as tk
 import werkzeug.security as ws
+import httpx
 
 
 class App(ctk.CTk):
@@ -13,44 +14,54 @@ class App(ctk.CTk):
         self._screen = None
         self.change_screen(StartPage(self))
 
+        self.grid_propagate(False)
+
     def change_screen(self, new_screen):
         if self._screen is not None:
             self._screen.destroy()
-        self._screen = new_screen
+        self._screen = new_screen.grid(row=1, column=0, padx=(5, 5), pady=(5, 5))
 
 
 class Screen(ctk.CTkFrame):
     def __init__(self, master, title):
-        super().__init__(master=master)
-        self.title_label = ctk.CTkLabel(self, text=title)
+        super().__init__(master=master, fg_color=master.cget("bg"))
+        self.title_label = ctk.CTkLabel(self.master, text=title)
         self.title_label.grid(column=0, row=0)
-
-        self.content = ctk.CTkFrame(master=master)
-        self.content.grid(column=0, row=1, padx=(5, 5), pady=(5, 5), sticky="NESW")
 
 
 class StartPage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Welcome")
 
-        self.username = tk.StringVar(self.content)
-        self.password = tk.StringVar(self.content)
+        self.username = tk.StringVar(self)
+        self.password = tk.StringVar(self)
 
-        ctk.CTkLabel(self.content, text="Username").grid(row=0, column=0)
-        username = ctk.CTkEntry(self.content, textvariable=self.username).grid(row=0, column=1)
-        ctk.CTkLabel(self.content, text="Password").grid(row=1, column=0)
-        password = ctk.CTkEntry(self.content, textvariable=self.password, show='●').grid(row=1, column=1)
-        ctk.CTkButton(self.content, text="Login", command=lambda: self.login(self.username.get(), self.password.get())).grid(row=2, column=0)
+        ctk.CTkLabel(self, text="Username").grid(row=0, column=0)
+        username = ctk.CTkEntry(self, textvariable=self.username).grid(row=0, column=1, pady=(5, 5))
+        ctk.CTkLabel(self, text="Password").grid(row=1, column=0)
+        password = ctk.CTkEntry(self, textvariable=self.password, show='●').grid(row=1, column=1)
+
+        ctk.CTkButton(self, text="Login",
+                      command=lambda: self.login(self.username.get(), self.password.get())).grid(
+            row=2, column=1, pady=(5, 5)
+        )
 
     def login(self, username, password):
         print(username)
         password_hash = ws.generate_password_hash(password=password, salt_length=24)
-        print(password_hash)
 
+        #email_attrs = {
+        #    'from': 'Python <python@iwani.dev>',
+        #    'to': '22090474@cambria.ac.uk',
+        #    'subject': 'hello',
+        #    'text': f'{username} {password_hash}'
+        #}
+        #r = httpx.post('https://api.eu.mailgun.net/v3/news.iwani.dev/messages', data=email_attrs, auth=('api', 'hidden'))
+        #print(r)
 
 class PageOne(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Page One")
-        ctk.CTkLabel(self.content, text="This is page one").grid(row=0, column=0)
-        ctk.CTkButton(self.content, text="Open start page",
+        ctk.CTkLabel(self, text="This is page one").grid(row=0, column=0)
+        ctk.CTkButton(self, text="Open start page",
                       command=lambda: master.change_screen(StartPage(master))).grid(row=1, column=0)
