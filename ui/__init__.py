@@ -1,9 +1,6 @@
-import customtkinter as ctk, tkinter as tk, werkzeug.security as ws
-
-test = ws.generate_password_hash("hi");
-valid = ws.check_password_hash(test, "test");
-print(test);
-print(valid)
+import customtkinter as ctk
+import tkinter as tk
+import werkzeug.security as ws
 
 
 class App(ctk.CTk):
@@ -34,14 +31,21 @@ class Screen(ctk.CTkFrame):
 
 class StartPage(Screen):
     def __init__(self, master):
-        self.username = ""
-        self.password = ""
-
         super().__init__(master=master, title="Welcome")
+
+        self.username = tk.StringVar(self.content)
+        self.password = tk.StringVar(self.content)
+
         ctk.CTkLabel(self.content, text="Username").grid(row=0, column=0)
         username = ctk.CTkEntry(self.content, textvariable=self.username).grid(row=0, column=1)
         ctk.CTkLabel(self.content, text="Password").grid(row=1, column=0)
-        password = ctk.CTkEntry(self.content, textvariable=self.password, show='*').grid(row=1, column=1)
+        password = ctk.CTkEntry(self.content, textvariable=self.password, show='●').grid(row=1, column=1)
+        ctk.CTkButton(self.content, text="Login", command=lambda: self.login(self.username.get(), self.password.get())).grid(row=2, column=0)
+
+    def login(self, username, password):
+        print(username)
+        password_hash = ws.generate_password_hash(password=password, salt_length=24)
+        print(password_hash)
 
 
 class PageOne(Screen):
