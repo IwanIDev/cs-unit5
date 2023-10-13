@@ -1,7 +1,6 @@
 import customtkinter as ctk
 import tkinter as tk
-import werkzeug.security as ws
-import httpx
+import login_manager
 
 
 class App(ctk.CTk):
@@ -42,22 +41,10 @@ class StartPage(Screen):
         password = ctk.CTkEntry(self, textvariable=self.password, show='●').grid(row=1, column=1)
 
         ctk.CTkButton(self, text="Login",
-                      command=lambda: self.login(self.username.get(), self.password.get())).grid(
+                      command=lambda: login_manager.register_user(self.username.get(), self.password.get())).grid(
             row=2, column=1, pady=(5, 5)
         )
 
-    def login(self, username, password):
-        print(username)
-        password_hash = ws.generate_password_hash(password=password, salt_length=24)
-
-        #email_attrs = {
-        #    'from': 'Python <python@iwani.dev>',
-        #    'to': '22090474@cambria.ac.uk',
-        #    'subject': 'hello',
-        #    'text': f'{username} {password_hash}'
-        #}
-        #r = httpx.post('https://api.eu.mailgun.net/v3/news.iwani.dev/messages', data=email_attrs, auth=('api', 'hidden'))
-        #print(r)
 
 class PageOne(Screen):
     def __init__(self, master):
