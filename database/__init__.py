@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 import sqlite3
+from tkinter import messagebox
+from contextlib import closing
 
 
 class DatabaseCell:
@@ -42,21 +44,29 @@ class Sqlite3Database(Database):
         return
 
     def create(self, database_cell: DatabaseCell):
-        cursor = self.connection.cursor()
         table = database_cell.table
         data = database_cell.data
 
-        keys = [i[0] for i in data]
-        values = (i[1] for i in data)
-        keys = ', '.join(keys)
-        print(keys, values)
+        # When we construct a DatabaseCell, we take in a dictionary.  This turns that into
+        # a list of keys as a string in SQL format and a tuple of values.  A bit annoying, but it works.
+        keys = ', '.join([key for key in data])
+        values = tuple([*data.values()])
 
         sql = f"""
         INSERT INTO {table} ({keys}) VALUES(?, ?);
-        """
-        print(sql)
-        cursor.executemany(sql, values)
+        """ # Constructs the SQL query, but doesn't take the user-generated data yet, to avoid
+            # possible SQL injections.
+
+        with closing(self.connection.cursor()) as cursor:
+            try:
+                cursor.executemany(sql, (values,)) # Even I don't understand why this works tbh.
+            except sqlite3.Error as e:
+                messagebox.showerror("Database error occured!", f"Database error\n{e}") # Probably a bit vague.
+                return
+
         self.connection.commit()
+        messagebox.showinfo("Data entered.", "Data entered into database.") # TODO: Turn this into a debug message.
+
 
     def update(self):
         pass  # Insert data into database
