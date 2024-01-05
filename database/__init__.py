@@ -2,6 +2,9 @@ from abc import ABC, abstractmethod
 import sqlite3
 from tkinter import messagebox
 from contextlib import closing
+from .query import Query
+from typing import Optional
+import logging
 
 
 class DatabaseCell:
@@ -20,7 +23,7 @@ class Database(ABC):
         pass
 
     @abstractmethod
-    def read(self, query):
+    def read(self, database_cell: DatabaseCell):
         pass
 
 
@@ -43,7 +46,7 @@ class Sqlite3Database(Database):
         self.connection.commit()
         return
 
-    def create(self, database_cell: DatabaseCell):
+    def create(self, database_cell: DatabaseCell) -> Optional[str]:
         table = database_cell.table
         data = database_cell.data
 
@@ -54,30 +57,46 @@ class Sqlite3Database(Database):
 
         sql = f"""
         INSERT INTO {table} ({keys}) VALUES(?, ?);
-        """ # Constructs the SQL query, but doesn't take the user-generated data yet, to avoid
-            # possible SQL injections.
+        """  # Constructs the SQL query, but doesn't take the user-generated data yet, to avoid
+        # possible SQL injections.
 
         with closing(self.connection.cursor()) as cursor:
             try:
-                cursor.executemany(sql, (values,)) # Even I don't understand why this works tbh.
+                cursor.executemany(sql, (values,))  # Even I don't understand why this works tbh.
             except sqlite3.Error as e:
-                messagebox.showerror("Database error occured!", f"Database error\n{e}") # Probably a bit vague.
-                return
+                return str(e)
 
         self.connection.commit()
-        messagebox.showinfo("Data entered.", "Data entered into database.") # TODO: Turn this into a debug message.
-
+        logging.log(logging.INFO, f"Created data {data} in table {table}.")
+        return
 
     def update(self):
         pass  # Insert data into database
 
-    def read(self, query):
-        pass  # Query data from database
+    def read(self, database_cell: DatabaseCell):
+        table = database_cell.table
+        data = database_cell.data
+
+        keys = ', '.join([key for key in data])
+        value = str(list(data.values())[0])
+        logging.log(logging.INFO, f"{value}")
+
+        sql = f"""
+        SELECT * FROM {table} WHERE {keys} LIKE ?;
+        """
+
+        with closing(self.connection.cursor()) as cursor:
+            try:
+                res = cursor.execute(sql, (value,))
+            except sqlite3.Error as e:
+                return str(e)
+            logging.log(logging.INFO, f"Queried data {data} from table {table}.")
+            return res.fetchall()
 
 
 database = Sqlite3Database(database_url="database.db",
                            tables={
                                "users": ["userid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT",
-                                         "username TEXT NOT NULL",
+                                         "username TEXT NOT NULL UNIQUE",
                                          "password TEXT NOT NULL"],  # Add the rest of the tables here.
                            })

@@ -1,3 +1,5 @@
+from tkinter import messagebox
+
 import customtkinter as ctk
 import tkinter as tk
 import login_manager
@@ -44,12 +46,30 @@ class StartPage(Screen):
         ctk.CTkButton(
             self,
             text="Register",
-            command=lambda: login_manager.register_user(
-                username=self.username.get(),
-                password=self.password.get(),
-                database=database,
-            ),
+            command=self.register_user,
         ).grid(row=2, column=1, pady=(5, 5))
+
+        ctk.CTkButton(
+            self,
+            text="Login",
+            command=self.login_user
+        ).grid(row=3, column=1, pady=(5, 5))
+
+    def login_user(self):
+        result, success = login_manager.login_user(username=self.username.get(), password=self.password.get(), database=database)
+        if not success:
+            messagebox.showerror(title="Database error", message=result)
+            return
+        messagebox.showinfo(title="Login successful", message=f"Login was successful. {result}")
+
+    def register_user(self):
+        result = login_manager.register_user(username=self.username.get(),
+                                             password=self.password.get(),
+                                             database=database)
+        if isinstance(result, str):
+            messagebox.showerror(title="Database error", message=result)
+            return
+        messagebox.showinfo(title="Data entered", message="Data entered into database!")
 
 
 class PageOne(Screen):
