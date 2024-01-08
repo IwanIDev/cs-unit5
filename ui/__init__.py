@@ -60,7 +60,7 @@ class StartPage(Screen):
         if not success:
             messagebox.showerror(title="Database error", message=result)
             return
-        messagebox.showinfo(title="Login successful", message=f"Login was successful. {result}")
+        messagebox.showinfo(title="Login successful", message=f"Login was successful.")
 
     def register_user(self):
         result = login_manager.register_user(username=self.username.get(),

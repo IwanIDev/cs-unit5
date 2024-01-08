@@ -46,7 +46,7 @@ class Sqlite3Database(Database):
         self.connection.commit()
         return
 
-    def create(self, database_cell: DatabaseCell) -> Optional[str]:
+    def create(self, database_cell: DatabaseCell) -> Optional[int]:
         table = database_cell.table
         data = database_cell.data
 
@@ -64,7 +64,7 @@ class Sqlite3Database(Database):
             try:
                 cursor.executemany(sql, (values,))  # Even I don't understand why this works tbh.
             except sqlite3.Error as e:
-                return str(e)
+                return e.sqlite_errorcode
 
         self.connection.commit()
         logging.log(logging.INFO, f"Created data {data} in table {table}.")
