@@ -71,7 +71,12 @@ class LoginPage(QtWidgets.QWidget):
             message.setText(f"{result}.\n Please try again.")
             message.exec()
             return
-        QtWidgets.QMessageBox.information(self, title="Login successful", text=f"Login was successful.")
+        message = QtWidgets.QMessageBox()
+        message.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        message.setWindowTitle("User logged in!")
+        message.setText("User logged in successfully!")
+        message.setDetailedText(f"Username: {self.username.text()}")
+        message.exec()
 
     def register_user(self):
         result = login_manager.register_user(username=self.username.text(),
@@ -92,6 +97,3 @@ class LoginPage(QtWidgets.QWidget):
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)
         message.setDetailedText("Yeet")
         message.exec()
-        return
-
-

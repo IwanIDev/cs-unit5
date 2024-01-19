@@ -1,6 +1,4 @@
-customtkinter~=5.2.0
 werkzeug~=3.0.0
 httpx~=0.25.0
-packaging
-pyside6~=6.6.1
 PyQt6~=6.6.1
+pyinstaller
