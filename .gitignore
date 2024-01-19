@@ -2,4 +2,6 @@ venv/
 .idea/
 .vscode/
 .mypy_cache/
+build/
+dist/
 database.db
