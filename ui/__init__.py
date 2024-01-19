@@ -1,12 +1,10 @@
-from tkinter import messagebox
-import customtkinter as ctk
-import tkinter as tk
-from PySide6.QtCore import QFile
 import login_manager
 from database import database
 import PyQt6.QtWidgets as QtWidgets
 from PyQt6.uic import loadUi
 from PyQt6 import QtCore
+import logging
+
 
 class Screen(QtWidgets.QWidget):
     def __init__(self, master, title):
@@ -28,92 +26,72 @@ def change_screen(new_screen: QtWidgets.QWidget):
 class App(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        self._screens = [
+            LoginPage()
+        ]
         self.setWindowTitle("Unit 5")
         self.setFixedSize(800, 600)
 
-        self._screen = None
-        change_screen(LoginPage(self))
+        self._layout = QtWidgets.QVBoxLayout()
+        self.setLayout(self._layout)
+        self.stacked_widget = QtWidgets.QStackedWidget()
+        for screen in self._screens:
+            self.stacked_widget.addWidget(screen)
+        self._layout.addWidget(self.stacked_widget)
+        self.setCentralWidget(self.stacked_widget)
+        self.change_screen(0)
+
+    def change_screen(self, new_screen: int):
+        self.stacked_widget.setCurrentIndex(0)
 
 
 class LoginPage(QtWidgets.QWidget):
-    def __init__(self, master):
+    def __init__(self):
         super().__init__()
-        file = QtCore.QFile(":/newPrefix/window.ui")
-        file.open(QtCore.QFile.ReadOnly)
-        loadUi(file, self)
+        file = QtCore.QFile("ui/qt/LoginPage.ui")
+        file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly)
+        loadUi(uifile=file, baseinstance=self)
         file.close()
 
-        login_button = self.findChild(QtWidgets.QPushButton, "loginButton")
-        login_button.clicked.connect(self.login_user())
-        register_button = self.findChild(QtWidgets.QPushButton, "registerButton")
-        register_button.clicked.connect(self.register_user())
+        self.login_button = self.findChild(QtWidgets.QPushButton, "loginButton")
+        self.login_button.clicked.connect(self.login_user)
+        self.register_button = self.findChild(QtWidgets.QPushButton, "registerButton")
+        self.register_button.clicked.connect(self.register_user)
+
+        self.username = self.findChild(QtWidgets.QLineEdit, "usernameForm")
+        self.password = self.findChild(QtWidgets.QLineEdit, "passwordForm")
 
     def login_user(self):
-        result, success = login_manager.login_user(username=self.username.get(), password=self.password.get(),
+        result, success = login_manager.login_user(username=self.username.text(), password=self.password.text(),
                                                    database=database)
         if not success:
-            messagebox.showerror(title="Database error", message=result)
+            message = QtWidgets.QMessageBox()
+            message.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            message.setWindowTitle("Error occured.")
+            message.setText(f"{result}.\n Please try again.")
+            message.exec()
             return
-        messagebox.showinfo(title="Login successful", message=f"Login was successful.")
+        QtWidgets.QMessageBox.information(self, title="Login successful", text=f"Login was successful.")
 
     def register_user(self):
-        result = login_manager.register_user(username=self.username.get(),
-                                             password=self.password.get(),
+        result = login_manager.register_user(username=self.username.text(),
+                                             password=self.password.text(),
                                              database=database)
+        logging.log(level=logging.INFO, msg=f"{result}")
+        logging.log(level=logging.INFO, msg=str(isinstance(result, str)))
         if isinstance(result, str):
-            messagebox.showerror(title="Database error", message=result)
+            message = QtWidgets.QMessageBox()
+            message.setWindowTitle("Error occured.")
+            message.setText(f"{result}")
+            message.exec()
             return
-        messagebox.showinfo(title="Data entered", message="Data entered into database!")
+        QtWidgets.QMessageBox.information(self, title="Database", text=f"Data entered successfully!")
+        message = QtWidgets.QMessageBox()
+        message.setWindowTitle("User registered")
+        message.setText(f"User {self.username.text()} registered successfully.")
+        message.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        message.setDetailedText("Yeet")
+        message.exec()
+        return
 
 
-class StartPage(Screen):
-    def __init__(self, master):
-        super().__init__(master=master, title="Welcome")
-
-        self.username = tk.StringVar(self)
-        self.password = tk.StringVar(self)
-
-        ctk.CTkLabel(self, text="Username").grid(row=0, column=0)
-        ctk.CTkEntry(self, textvariable=self.username).grid(row=0, column=1)
-        ctk.CTkLabel(self, text="Password").grid(row=1, column=0)
-        ctk.CTkEntry(self, textvariable=self.password, show="●").grid(row=1, column=1)
-
-        register_button = QtWidgets.QPushButton(
-            parent=self,
-            text="Register",
-        )
-        register_button.clicked.connect(self.register_user())
-
-        login_button = ctk.CTkButton(
-            self,
-            text="Login",
-            command=self.login_user
-        ).grid(row=3, column=1, pady=(5, 5))
-
-    def login_user(self):
-        result, success = login_manager.login_user(username=self.username.get(), password=self.password.get(),
-                                                   database=database)
-        if not success:
-            messagebox.showerror(title="Database error", message=result)
-            return
-        messagebox.showinfo(title="Login successful", message=f"Login was successful.")
-
-    def register_user(self):
-        result = login_manager.register_user(username=self.username.get(),
-                                             password=self.password.get(),
-                                             database=database)
-        if isinstance(result, str):
-            messagebox.showerror(title="Database error", message=result)
-            return
-        messagebox.showinfo(title="Data entered", message="Data entered into database!")
-
-
-class PageOne(Screen):
-    def __init__(self, master):
-        super().__init__(master=master, title="Page One")
-        ctk.CTkLabel(self, text="This is page one").grid(row=0, column=0)
-        ctk.CTkButton(
-            self,
-            text="Open start page",
-            command=lambda: master.change_screen(StartPage(master)),
-        ).grid(row=1, column=0)

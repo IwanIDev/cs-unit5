@@ -5,6 +5,8 @@ import logging
 
 
 def register_user(database: db.Database, username, password) -> Optional[str]:
+    if not username or not password:
+        return "No items input."
     password = ws.generate_password_hash(password=password)
     data = {
         "username": username,
@@ -13,14 +15,16 @@ def register_user(database: db.Database, username, password) -> Optional[str]:
     database_cell = db.DatabaseCell(table="users", data=data)
     result = database.create(database_cell=database_cell)
     if isinstance(result, int):
-        if result == 2067:  # TODO: Needs change
-            return "Username already taken. Please try again."
+        if result == 2067:
+            return "Username already exists."
         return str(result)
     logging.info(msg=f"Registered user: {username}.")
     return
 
 
 def login_user(database: db.Database, username: str, password: str) -> tuple:
+    if not username or not password:
+        return "Missing data items.", False
     data = {
         "username": username
     }
