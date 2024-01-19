@@ -1,34 +1,69 @@
 from tkinter import messagebox
-
 import customtkinter as ctk
 import tkinter as tk
+from PySide6.QtCore import QFile
 import login_manager
 from database import database
+import PyQt6.QtWidgets as QtWidgets
+from PyQt6.uic import loadUi
+from PyQt6 import QtCore
 
-
-class Screen(ctk.CTkFrame):
+class Screen(QtWidgets.QWidget):
     def __init__(self, master, title):
-        super().__init__(master=master, fg_color=master.cget("bg"))
-        self.title_label = ctk.CTkLabel(self.master, text=title)
-        self.title_label.grid(column=0, row=0)
+        super().__init__()
+        layout = QtWidgets.QVBoxLayout()
+        self.label = QtWidgets.QLabel("Another Window")
+        layout.addWidget(self.label)
+        self.setLayout(layout)
 
 
-class App(ctk.CTk):
+def change_screen(new_screen: QtWidgets.QWidget):
+    # if self._screen is not None:
+    #    self._screen.destroy()
+    # self._screen = new_screen.grid(row=1, column=0, padx=(5, 5), pady=(5, 5))
+    window = new_screen
+    window.show()
+
+
+class App(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.title("Unit 5")
-        self.geometry("400x300")
-        self.resizable(False, False)
+        self.setWindowTitle("Unit 5")
+        self.setFixedSize(800, 600)
 
         self._screen = None
-        self.change_screen(StartPage(self))
+        change_screen(LoginPage(self))
 
-        self.grid_propagate(False)
 
-    def change_screen(self, new_screen: Screen):
-        if self._screen is not None:
-            self._screen.destroy()
-        self._screen = new_screen.grid(row=1, column=0, padx=(5, 5), pady=(5, 5))
+class LoginPage(QtWidgets.QWidget):
+    def __init__(self, master):
+        super().__init__()
+        file = QtCore.QFile(":/newPrefix/window.ui")
+        file.open(QtCore.QFile.ReadOnly)
+        loadUi(file, self)
+        file.close()
+
+        login_button = self.findChild(QtWidgets.QPushButton, "loginButton")
+        login_button.clicked.connect(self.login_user())
+        register_button = self.findChild(QtWidgets.QPushButton, "registerButton")
+        register_button.clicked.connect(self.register_user())
+
+    def login_user(self):
+        result, success = login_manager.login_user(username=self.username.get(), password=self.password.get(),
+                                                   database=database)
+        if not success:
+            messagebox.showerror(title="Database error", message=result)
+            return
+        messagebox.showinfo(title="Login successful", message=f"Login was successful.")
+
+    def register_user(self):
+        result = login_manager.register_user(username=self.username.get(),
+                                             password=self.password.get(),
+                                             database=database)
+        if isinstance(result, str):
+            messagebox.showerror(title="Database error", message=result)
+            return
+        messagebox.showinfo(title="Data entered", message="Data entered into database!")
 
 
 class StartPage(Screen):
@@ -43,20 +78,21 @@ class StartPage(Screen):
         ctk.CTkLabel(self, text="Password").grid(row=1, column=0)
         ctk.CTkEntry(self, textvariable=self.password, show="●").grid(row=1, column=1)
 
-        ctk.CTkButton(
-            self,
+        register_button = QtWidgets.QPushButton(
+            parent=self,
             text="Register",
-            command=self.register_user,
-        ).grid(row=2, column=1, pady=(5, 5))
+        )
+        register_button.clicked.connect(self.register_user())
 
-        ctk.CTkButton(
+        login_button = ctk.CTkButton(
             self,
             text="Login",
             command=self.login_user
         ).grid(row=3, column=1, pady=(5, 5))
 
     def login_user(self):
-        result, success = login_manager.login_user(username=self.username.get(), password=self.password.get(), database=database)
+        result, success = login_manager.login_user(username=self.username.get(), password=self.password.get(),
+                                                   database=database)
         if not success:
             messagebox.showerror(title="Database error", message=result)
             return
