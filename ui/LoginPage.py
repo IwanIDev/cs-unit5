@@ -4,13 +4,16 @@ from database import database
 from .screen import Screen
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.uic import loadUi
+from pathlib import Path
 
 
 class LoginPage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Login or Register")
         self.master = master
-        file = QtCore.QFile("ui/qt/LoginPage.ui")
+        path = Path(__file__).parent.resolve()
+        path = path.joinpath("qt", "LoginPage.ui")
+        file = QtCore.QFile(str(path))
         file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly)
         loadUi(uifile=file, baseinstance=self)
         file.close()

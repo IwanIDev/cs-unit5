@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 import sqlite3
-from tkinter import messagebox
 from contextlib import closing
 from .query import Query
 from typing import Optional
 import logging
+from utils import get_platform_dir
 
 
 class DatabaseCell:
@@ -94,7 +94,7 @@ class Sqlite3Database(Database):
             return res.fetchall()
 
 
-database = Sqlite3Database(database_url="database.db",
+database = Sqlite3Database(database_url=str(get_platform_dir() / "database.sqlite"),
                            tables={
                                "users": ["userid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT",
                                          "username TEXT NOT NULL UNIQUE",
