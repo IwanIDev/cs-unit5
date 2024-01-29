@@ -35,7 +35,7 @@ class BooksListPage(Screen):
         self.set_books_table()
 
         self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
-        self.addBookButton.clicked.connect(lambda: self.createBook())
+        self.addBookButton.clicked.connect(lambda: self.create_book())
 
     def set_books_table(self):
         for count, item in enumerate(self.books):
@@ -45,5 +45,4 @@ class BooksListPage(Screen):
     def create_book(self):
         diag = CreateBookDiag(self.master)
         diag.setWindowTitle("Create Book")
-        diag.setWindowIcon(QtWidgets.QMessageBox.Icon.Information)
         diag.exec()
