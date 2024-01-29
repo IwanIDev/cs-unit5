@@ -1,5 +1,6 @@
 from .LoginPage import LoginPage
 from .HomePage import HomePage
+from .BooksListPage import BooksListPage
 import PyQt6.QtWidgets as QtWidgets
 from .screen import Screen
 import logging
@@ -18,7 +19,8 @@ class App(QtWidgets.QMainWindow):
         self._layout.addWidget(self.title)
         self._screens = [
             LoginPage(self),
-            HomePage(self)
+            HomePage(self),
+            BooksListPage(self)
         ]
         self.stacked_widget = QtWidgets.QStackedWidget()
         for stacked_screen in self._screens:
