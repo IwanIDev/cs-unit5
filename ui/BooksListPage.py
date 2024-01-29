@@ -1,9 +1,9 @@
 from typing import List
-
 from .screen import Screen
 from PyQt6 import QtCore, uic
 from pathlib import Path
 from PyQt6 import QtWidgets
+from .CreateBookDiag import CreateBookDiag
 
 
 def get_books() -> List[tuple]:
@@ -34,7 +34,16 @@ class BooksListPage(Screen):
         self.listWidget.setRowCount(len(self.books))
         self.set_books_table()
 
+        self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
+        self.addBookButton.clicked.connect(lambda: self.createBook())
+
     def set_books_table(self):
         for count, item in enumerate(self.books):
             self.listWidget.setItem(count, 0, QtWidgets.QTableWidgetItem(item[0]))
             self.listWidget.setItem(count, 1, QtWidgets.QTableWidgetItem(item[1]))
+
+    def create_book(self):
+        diag = CreateBookDiag(self.master)
+        diag.setWindowTitle("Create Book")
+        diag.setWindowIcon(QtWidgets.QMessageBox.Icon.Information)
+        diag.exec()
