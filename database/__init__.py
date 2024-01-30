@@ -55,8 +55,12 @@ class Sqlite3Database(Database):
         keys = ', '.join([key for key in data])
         values = tuple([*data.values()])
 
+        qmark = "?"
+        for cols in range(1, len(values)):
+            qmark += ",?"
+
         sql = f"""
-        INSERT INTO {table} ({keys}) VALUES(?, ?);
+        INSERT INTO {table} ({keys}) VALUES({qmark});
         """  # Constructs the SQL query, but doesn't take the user-generated data yet, to avoid
         # possible SQL injections.
 
@@ -64,6 +68,7 @@ class Sqlite3Database(Database):
             try:
                 cursor.executemany(sql, (values,))  # Even I don't understand why this works tbh.
             except sqlite3.Error as e:
+                logging.error(msg=f"Database error: {e.sqlite_errorcode}, message: {str(e)}")
                 return e.sqlite_errorcode
 
         self.connection.commit()
@@ -98,5 +103,6 @@ database = Sqlite3Database(database_url=str(get_platform_dir() / "database.sqlit
                            tables={
                                "users": ["userid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT",
                                          "username TEXT NOT NULL UNIQUE",
-                                         "password TEXT NOT NULL"],  # Add the rest of the tables here.
+                                         "password TEXT NOT NULL",
+                                         "dateCreated INTEGER NOT NULL"],  # Add the rest of the tables here.
                            })

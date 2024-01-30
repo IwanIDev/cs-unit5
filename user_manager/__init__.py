@@ -2,15 +2,18 @@ import werkzeug.security as ws
 import database as db
 from typing import Optional
 import logging
+from .user import User
+from datetime import datetime
 
 
 def register_user(database: db.Database, username, password) -> Optional[str]:
     if not username or not password:
         return "No items input."
-    password = ws.generate_password_hash(password=password)
+    user = User(username=username, password=password, date_created=datetime.now())
     data = {
-        "username": username,
-        "password": password
+        "username": user.username,
+        "password": user.password,
+        "dateCreated": user.date_created
     }
     database_cell = db.DatabaseCell(table="users", data=data)
     result = database.create(database_cell=database_cell)

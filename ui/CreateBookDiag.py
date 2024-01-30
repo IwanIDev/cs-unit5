@@ -1,6 +1,5 @@
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
-from PyQt6.QtWidgets import QDialogButtonBox
 import logging
 
 
@@ -16,7 +15,15 @@ class CreateBookDiag(QtWidgets.QDialog):
         file.close()
 
         self.button_box = self.findChild(QtWidgets.QDialogButtonBox, "buttonBox")
-        self.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Save).clicked.connect(lambda: self.confirm())
+        self.save_button = self.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Save)
+        self.save_button.clicked.connect(lambda: self.confirm())
+
+        self.isbn = self.findChild(QtWidgets.QLineEdit, "isbnInput")
 
     def confirm(self):
-        logging.log(level=logging.INFO, msg="Ok Button Clicked!")
+        message = QtWidgets.QMessageBox()
+        message.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        message.setWindowTitle("Book Created")
+        message.setText(f"{self.isbn.text()}")
+        message.exec()
+        self.accept()

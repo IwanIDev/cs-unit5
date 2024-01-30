@@ -1,5 +1,5 @@
 import logging
-import login_manager
+import user_manager
 from database import database
 from .screen import Screen
 from PyQt6 import QtWidgets, QtCore
@@ -27,8 +27,8 @@ class LoginPage(Screen):
         self.password = self.findChild(QtWidgets.QLineEdit, "passwordForm")
 
     def login_user(self):
-        result, success = login_manager.login_user(username=self.username.text(), password=self.password.text(),
-                                                   database=database)
+        result, success = user_manager.login_user(username=self.username.text(), password=self.password.text(),
+                                                  database=database)
         if not success:
             message = QtWidgets.QMessageBox()
             message.setIcon(QtWidgets.QMessageBox.Icon.Information)
@@ -45,9 +45,9 @@ class LoginPage(Screen):
         self.master.change_screen(1)
 
     def register_user(self):
-        result = login_manager.register_user(username=self.username.text(),
-                                             password=self.password.text(),
-                                             database=database)
+        result = user_manager.register_user(username=self.username.text(),
+                                            password=self.password.text(),
+                                            database=database)
         logging.log(level=logging.INFO, msg=f"{result}")
         logging.log(level=logging.INFO, msg=str(isinstance(result, str)))
         if isinstance(result, str):

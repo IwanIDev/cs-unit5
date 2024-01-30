@@ -1,13 +1,36 @@
+import logging
 from typing import List
 from .screen import Screen
-from PyQt6 import QtCore, uic
+from PyQt6 import QtCore, uic, QtWidgets
 from pathlib import Path
-from PyQt6 import QtWidgets
 from .CreateBookDiag import CreateBookDiag
 
 
 def get_books() -> List[tuple]:
     return [("Book One", "Two"), ("Book Two", "Three")]
+
+
+class ConfirmDeleteDialog(QtWidgets.QDialog):
+    def __init__(self, book, parent=None):
+        super().__init__(parent)
+        self.book = book
+        self.setWindowTitle("Confirm Delete Action")
+
+        QBtn = QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+
+        self.buttonBox = QtWidgets.QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(lambda: self.accept())
+        #self.buttonBox.rejected.connect(self.reject)
+
+        self.layout = QtWidgets.QVBoxLayout()
+        message = QtWidgets.QLabel(f"Are you sure you want to delete book {self.book}?")
+        self.layout.addWidget(message)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+
+    def accept(self) -> None:
+        logging.info(msg=f"Book {self.book} deleted.")
+        self.done(QtWidgets.QDialog.DialogCode.Accepted)
 
 
 class BooksListPage(Screen):
@@ -36,6 +59,8 @@ class BooksListPage(Screen):
 
         self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
         self.addBookButton.clicked.connect(lambda: self.create_book())
+        self.deleteBookButton = self.findChild(QtWidgets.QPushButton, "deleteButton")
+        self.deleteBookButton.clicked.connect(lambda: self.delete_book())
 
     def set_books_table(self):
         for count, item in enumerate(self.books):
@@ -46,3 +71,13 @@ class BooksListPage(Screen):
         diag = CreateBookDiag(self.master)
         diag.setWindowTitle("Create Book")
         diag.exec()
+
+    def delete_book(self):
+        bookId = self.listWidget.currentRow()
+        book = f"{self.books[bookId][0]}, {self.books[bookId][1]}"
+        dialog = ConfirmDeleteDialog(parent=self.master, book=book)
+        result = dialog.exec()
+
+        if result == QtWidgets.QDialog.DialogCode.Accepted:
+            pass
+            # delete book
