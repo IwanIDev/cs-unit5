@@ -2,6 +2,7 @@ from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 import logging
 from book_manager import get_from_isbn, add_book_to_database
+import asyncio
 
 
 class CreateBookDiag(QtWidgets.QDialog):
@@ -24,7 +25,7 @@ class CreateBookDiag(QtWidgets.QDialog):
     def confirm(self):
         isbn = self.isbn.text()
         try:
-            book = get_from_isbn(str(isbn))
+            book = asyncio.run(get_from_isbn(str(isbn)))
         except ValueError:
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
             return

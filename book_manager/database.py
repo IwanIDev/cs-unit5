@@ -20,4 +20,4 @@ def add_book_to_database(book: Book) -> bool:
     return True
 
 def get_all_books() -> List[Book]:
-    database_cell = DatabaseCell(table='books')
+    pass

@@ -6,12 +6,13 @@ import logging
 from datetime import datetime
 
 
-def get_from_isbn(isbn: str) -> Optional[Book]:
-    r = httpx.get(url=f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
-    if r.status_code != httpx.codes.OK:
-        logging.warning(f'Status code not okay: {r.status_code}.')
+async def get_from_isbn(isbn: str) -> Optional[Book]:
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url=f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
+    if response.status_code != httpx.codes.OK:
+        logging.warning(f'Status code not okay: {response.status_code}.')
         return None
-    result = json.loads(r.text)
+    result = json.loads(response.text)
     if result['totalItems'] <= 0:
         logging.warning(f'No volumes found for {isbn}.')
         return None
