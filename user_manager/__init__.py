@@ -9,11 +9,11 @@ from datetime import datetime
 def register_user(database: db.Database, username, password) -> Optional[str]:
     if not username or not password:
         return "No items input."
-    user = User(username=username, password=password, date_created=datetime.now())
+    user_to_register = User(username=username, password=password, date_created=datetime.now())
     data = {
-        "username": user.username,
-        "password": user.password,
-        "dateCreated": user.date_created
+        "username": user_to_register.username,
+        "password": user_to_register.password,
+        "dateCreated": user_to_register.date_created
     }
     database_cell = db.DatabaseCell(table="users", data=data)
     result = database.create(database_cell=database_cell)

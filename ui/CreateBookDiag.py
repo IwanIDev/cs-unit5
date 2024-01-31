@@ -1,6 +1,7 @@
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 import logging
+from book_manager import get_from_isbn, add_book_to_database
 
 
 class CreateBookDiag(QtWidgets.QDialog):
@@ -21,9 +22,23 @@ class CreateBookDiag(QtWidgets.QDialog):
         self.isbn = self.findChild(QtWidgets.QLineEdit, "isbnInput")
 
     def confirm(self):
+        isbn = self.isbn.text()
+        try:
+            book = get_from_isbn(str(isbn))
+        except ValueError:
+            QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
+            return
+        if book is None:
+            QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
+            return
+        result = add_book_to_database(book)
+        if not result:
+            QtWidgets.QMessageBox.warning(self, "Error", f"Book couldn't be added to database. \
+            See logs for details")
+            logging.critical(msg=f"Book couldn't be added to database.")
         message = QtWidgets.QMessageBox()
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)
         message.setWindowTitle("Book Created")
-        message.setText(f"{self.isbn.text()}")
+        message.setText(f"{book.isbn}, {book.title}, {book.author}")
         message.exec()
         self.accept()

@@ -104,5 +104,12 @@ database = Sqlite3Database(database_url=str(get_platform_dir() / "database.sqlit
                                "users": ["userid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT",
                                          "username TEXT NOT NULL UNIQUE",
                                          "password TEXT NOT NULL",
-                                         "dateCreated INTEGER NOT NULL"],  # Add the rest of the tables here.
+                                         "dateCreated INTEGER NOT NULL"],
+                               "books": [
+                                   "bookid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT",
+                                   "title TEXT NOT NULL",
+                                   "author TEXT NOT NULL",
+                                   "isbn TEXT NOT NULL",
+                                   "datePublished INTEGER NOT NULL"
+                               ]# Add the rest of the tables here.
                            })
