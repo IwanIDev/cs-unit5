@@ -1,11 +1,19 @@
 from pathlib import Path
-from platformdirs import PlatformDirs
-import logging
+import sys
+from os import getenv
 
 
 def get_platform_dir() -> Path:
-    dirs = PlatformDirs(appname="LibraryApp", appauthor="IwanI")
-    path = Path(dirs.user_data_dir).resolve()
-    path.mkdir(parents=True, exist_ok=True)
-    logging.info(msg=f"{str(path)}")
-    return path
+    # get os specific path
+    if sys.platform.startswith("win"):
+        os_path = getenv("LOCALAPPDATA")
+    elif sys.platform.startswith("darwin"):
+        os_path = "~/Library/Application Support"
+    else:
+        # linux
+        os_path = getenv("XDG_DATA_HOME", "~/.local/share")
+
+    # join with SwagLyrics dir
+    path = Path(os_path) / "LibraryApp"
+
+    return path.expanduser()

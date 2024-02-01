@@ -5,5 +5,5 @@ class Book:
         self.isbn = isbn
         self.title = title
         self.author = author
-        self.date_published = date_of_publishing.timestamp()
+        self.date_published = date_of_publishing
     

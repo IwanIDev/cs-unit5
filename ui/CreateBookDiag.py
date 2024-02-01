@@ -3,6 +3,7 @@ from pathlib import Path
 import logging
 from book_manager import get_from_isbn, add_book_to_database
 import asyncio
+from database import database
 
 
 class CreateBookDiag(QtWidgets.QDialog):
@@ -32,7 +33,7 @@ class CreateBookDiag(QtWidgets.QDialog):
         if book is None:
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
             return
-        result = add_book_to_database(book)
+        result = add_book_to_database(book=book, database=database)
         if not result:
             QtWidgets.QMessageBox.warning(self, "Error", f"Book couldn't be added to database. \
             See logs for details")

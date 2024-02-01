@@ -26,6 +26,10 @@ class Database(ABC):
     def read(self, database_cell: DatabaseCell):
         pass
 
+    @abstractmethod
+    def delete(self, database_cell: DatabaseCell):
+        pass
+
 
 class Sqlite3Database(Database):
     def __init__(self, database_url, tables):
@@ -78,21 +82,60 @@ class Sqlite3Database(Database):
     def update(self):
         pass  # Insert data into database
 
+    def delete(self, database_cell: DatabaseCell) -> Optional[str]:
+        table = database_cell.table
+        data = database_cell.data
+        keys = ', '.join([key for key in data])
+        sql = ""
+        if len(data) < 1:
+            sql = f"""
+                           DELETE FROM {table};
+                           """
+            value = ""
+        else:
+            sql = f"""
+                           DELETE FROM {table} WHERE {keys} LIKE ?;
+                           """
+            value = str(list(data.values())[0])
+
+        with closing(self.connection.cursor()) as cursor:
+            try:
+                if value:
+                    logging.info(msg=f"{value}")
+                    res = cursor.execute(sql, (value,))
+                else:
+                    res = cursor.execute(sql)
+            except sqlite3.Error as e:
+                return str(e)
+            logging.log(logging.INFO, f"Deleted data {data} from table {table}.")
+        self.connection.commit()
+        return
+
     def read(self, database_cell: DatabaseCell):
         table = database_cell.table
         data = database_cell.data
 
         keys = ', '.join([key for key in data])
-        value = str(list(data.values())[0])
-        logging.log(logging.INFO, f"{value}")
+        sql = ""
+        if len(data) < 1:
+            sql = f"""
+                   SELECT * FROM {table};
+                   """
+            value = ""
+        else:
+            sql = f"""
+                   SELECT * FROM {table} WHERE {keys} LIKE ?;
+                   """
+            value = str(list(data.values())[0])
 
-        sql = f"""
-        SELECT * FROM {table} WHERE {keys} LIKE ?;
-        """
+        logging.log(logging.INFO, f"{value}")
 
         with closing(self.connection.cursor()) as cursor:
             try:
-                res = cursor.execute(sql, (value,))
+                if value:
+                    res = cursor.execute(sql, (value,))
+                else:
+                    res = cursor.execute(sql)
             except sqlite3.Error as e:
                 return str(e)
             logging.log(logging.INFO, f"Queried data {data} from table {table}.")

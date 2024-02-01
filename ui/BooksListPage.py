@@ -4,10 +4,8 @@ from .screen import Screen
 from PyQt6 import QtCore, uic, QtWidgets
 from pathlib import Path
 from .CreateBookDiag import CreateBookDiag
-
-
-def get_books() -> List[tuple]:
-    return [("Book One", "Two"), ("Book Two", "Three")]
+import book_manager as bookman
+from database import database
 
 
 class ConfirmDeleteDialog(QtWidgets.QDialog):
@@ -20,10 +18,10 @@ class ConfirmDeleteDialog(QtWidgets.QDialog):
 
         self.buttonBox = QtWidgets.QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(lambda: self.accept())
-        #self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.rejected.connect(lambda: self.reject())
 
         self.layout = QtWidgets.QVBoxLayout()
-        message = QtWidgets.QLabel(f"Are you sure you want to delete book {self.book}?")
+        message = QtWidgets.QLabel(f"Are you sure you want to delete book {self.book.title}?")
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
@@ -31,6 +29,9 @@ class ConfirmDeleteDialog(QtWidgets.QDialog):
     def accept(self) -> None:
         logging.info(msg=f"Book {self.book} deleted.")
         self.done(QtWidgets.QDialog.DialogCode.Accepted)
+
+    def reject(self) -> None:
+        self.done(QtWidgets.QDialog.DialogCode.Rejected)
 
 
 class BooksListPage(Screen):
@@ -53,7 +54,8 @@ class BooksListPage(Screen):
 
         self.listWidget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
         self.listWidget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
-        self.books = get_books()
+        self.listWidget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.books = self.get_books()
         self.listWidget.setRowCount(len(self.books))
         self.set_books_table()
 
@@ -62,22 +64,40 @@ class BooksListPage(Screen):
         self.deleteBookButton = self.findChild(QtWidgets.QPushButton, "deleteButton")
         self.deleteBookButton.clicked.connect(lambda: self.delete_book())
 
+    def get_books(self) -> List[bookman.Book]:
+        result, success = bookman.get_all_books(database)
+        if not success:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Couldn't retrieve books, read logs for error.")
+            return []
+        return result
+
     def set_books_table(self):
         for count, item in enumerate(self.books):
-            self.listWidget.setItem(count, 0, QtWidgets.QTableWidgetItem(item[0]))
-            self.listWidget.setItem(count, 1, QtWidgets.QTableWidgetItem(item[1]))
+            self.listWidget.setItem(count, 0, QtWidgets.QTableWidgetItem(item.title))
+            self.listWidget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.author))
+            self.listWidget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
 
     def create_book(self):
         diag = CreateBookDiag(self.master)
         diag.setWindowTitle("Create Book")
         diag.exec()
+        self.books = self.get_books()
+        self.listWidget.setRowCount(len(self.books))
+        self.set_books_table()
 
     def delete_book(self):
-        bookId = self.listWidget.currentRow()
-        book = f"{self.books[bookId][0]}, {self.books[bookId][1]}"
+        book_id = self.listWidget.currentRow()
+        book = self.books[book_id]
         dialog = ConfirmDeleteDialog(parent=self.master, book=book)
         result = dialog.exec()
 
-        if result == QtWidgets.QDialog.DialogCode.Accepted:
-            pass
-            # delete book
+        if result != QtWidgets.QDialog.DialogCode.Accepted:
+            return
+        success = bookman.delete_book(database=database, book=book)
+        if not success:
+            QtWidgets.QMessageBox.critical(self, "Error", "Book couldn't be deleted, check logs for error.")
+            return
+        QtWidgets.QMessageBox.information(self, "Book deleted", f"Book {book.title} deleted.")
+        self.books = self.get_books()
+        self.listWidget.setRowCount(len(self.books))
+        self.set_books_table()
