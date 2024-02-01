@@ -10,7 +10,7 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
         'title': book.title,
         'author': book.author,
         'isbn': book.isbn,
-        'datePublished': book.date_published.timestamp()
+        'datePublished': str(book.date_published.timestamp())
     }
     database_cell = db.DatabaseCell(table='books', data=data)
     result = database.create(database_cell=database_cell)

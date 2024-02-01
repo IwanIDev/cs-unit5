@@ -45,7 +45,7 @@ class LoginPage(Screen):
         self.master.change_screen(1)
 
     def register_user(self):
-        result = user_manager.register_user(username=self.username.text(),
+        result, success = user_manager.register_user(username=self.username.text(),
                                             password=self.password.text(),
                                             database=database)
         logging.log(level=logging.INFO, msg=f"{result}")
