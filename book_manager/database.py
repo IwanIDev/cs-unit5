@@ -44,3 +44,21 @@ def delete_book(database: db.Database, book: Book) -> bool:
         return False
     logging.info(msg=f"Successfully deleted {book.title} from database.")
     return True
+
+
+def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
+    data = {
+        "isbn": book.isbn,
+        "title": book.title,
+        "author": book.author,
+        "datePublished": str(book.date_published.timestamp())
+    }
+    where = ("isbn", book.isbn)
+    database_cell = db.DatabaseCell(table="books", data=data)
+    logging.info(msg=f"{database_cell.table}, {str(database_cell.data)}")
+    result = database.update(database_cell=database_cell, where=where)
+    if isinstance(result, str):
+        logging.error(msg=f"Database error: {result}.")
+        return result, False
+    logging.info(msg=f"Successfully updated book {book.title}.")
+    return "", True

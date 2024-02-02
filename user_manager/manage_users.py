@@ -30,3 +30,21 @@ def delete_user(database: db.Database, user: User) -> bool:
         return False
     logging.info(msg=f"Successfully deleted {user.username} from database.")
     return True
+
+
+def edit_book(database: db.Database, user: User) -> Tuple[str, bool]:
+    data = {
+        "username": user.username,
+        "password": user.password,
+        "dateCreated": str(user.date_created.timestamp())
+    }
+    where = ("username", user.username)
+    database_cell = db.DatabaseCell(table="users", data=data)
+    logging.info(msg=f"{database_cell.table}, {str(database_cell.data)}")
+    result = database.update(database_cell=database_cell, where=where)
+    if isinstance(result, str):
+        logging.error(msg=f"Database error: {result}.")
+        return result, False
+    logging.info(msg=f"Successfully updated user {user.username}.")
+    return "", True
+

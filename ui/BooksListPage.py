@@ -4,6 +4,7 @@ from .screen import Screen
 from PyQt6 import QtCore, uic, QtWidgets
 from pathlib import Path
 from .CreateBookDiag import CreateBookDiag
+from .EditBooksDialog import EditBooksDialog
 import book_manager as bookman
 from database import database
 
@@ -37,6 +38,7 @@ class ConfirmDeleteDialog(QtWidgets.QDialog):
 class BooksListPage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Books Page")
+        self.books = []
         self.master = master
         path = Path(__file__).parent.resolve()
         path = path.joinpath("qt", "BooksListPage.ui")
@@ -55,14 +57,14 @@ class BooksListPage(Screen):
         self.listWidget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
         self.listWidget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.listWidget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.books = self.get_books()
-        self.listWidget.setRowCount(len(self.books))
-        self.set_books_table()
+        self.refresh_books()
 
         self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
         self.addBookButton.clicked.connect(lambda: self.create_book())
         self.deleteBookButton = self.findChild(QtWidgets.QPushButton, "deleteButton")
         self.deleteBookButton.clicked.connect(lambda: self.delete_book())
+        self.edit_button = self.findChild(QtWidgets.QPushButton, "editButton")
+        self.edit_button.clicked.connect(lambda: self.edit_book())
 
     def get_books(self) -> List[bookman.Book]:
         result, success = bookman.get_all_books(database)
@@ -81,9 +83,7 @@ class BooksListPage(Screen):
         diag = CreateBookDiag(self.master)
         diag.setWindowTitle("Create Book")
         diag.exec()
-        self.books = self.get_books()
-        self.listWidget.setRowCount(len(self.books))
-        self.set_books_table()
+        self.refresh_books()
 
     def delete_book(self):
         book_id = self.listWidget.currentRow()
@@ -98,6 +98,20 @@ class BooksListPage(Screen):
             QtWidgets.QMessageBox.critical(self, "Error", "Book couldn't be deleted, check logs for error.")
             return
         QtWidgets.QMessageBox.information(self, "Book deleted", f"Book {book.title} deleted.")
+        self.refresh_books()
+
+    def edit_book(self):
+        book_id = self.listWidget.currentRow()
+        book = self.books[book_id]
+        dialog = EditBooksDialog(master=self.master, book=book)
+        result = dialog.exec()
+
+        if result != QtWidgets.QDialog.DialogCode.Accepted:
+            return
+        QtWidgets.QMessageBox.information(self, "Book Edited", "Book has been edited.")
+        self.refresh_books()
+
+    def refresh_books(self):
         self.books = self.get_books()
         self.listWidget.setRowCount(len(self.books))
         self.set_books_table()
