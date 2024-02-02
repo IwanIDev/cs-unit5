@@ -63,7 +63,8 @@ class Sqlite3Database(Database):
         for key, value in data.items():
             set_statement.append(f"{key} = ?")
         set_string = ', '.join(set_statement)
-        where_statement = f"{where[0]} = {f"'{where[1]}'" if type(where[1]) is str else where[1]}"
+        where_string = f"'{where[1]}'" if type(where[1]) is str else str(where[1])
+        where_statement = f"{where[0]} = {where_string}"
         sql = f"""
         UPDATE {table} SET {set_string} WHERE {where_statement};
         """
