@@ -15,5 +15,5 @@ def get_platform_dir() -> Path:
 
     # join with SwagLyrics dir
     path = Path(os_path) / "LibraryApp"
-
+    path.mkdir(parents=True, exist_ok=True)
     return path.expanduser()

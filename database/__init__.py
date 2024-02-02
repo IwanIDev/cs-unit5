@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import sqlite3
 from contextlib import closing
 from .query import Query
-from typing import Optional
+from typing import Optional, Tuple
 import logging
 from utils import get_platform_dir
 
@@ -19,7 +19,7 @@ class Database(ABC):
         pass
 
     @abstractmethod
-    def update(self):
+    def update(self, database_cell: DatabaseCell, where: Tuple[str, str]):
         pass
 
     @abstractmethod
@@ -79,8 +79,30 @@ class Sqlite3Database(Database):
         logging.log(logging.INFO, f"Created data {data} in table {table}.")
         return
 
-    def update(self):
-        pass  # Insert data into database
+    def update(self, database_cell: DatabaseCell, where: Tuple[str, str]) -> Optional[str]:
+        table = database_cell.table
+        data = database_cell.data
+        keys = list(data.keys())
+        values = tuple([*data.values()])
+        set_statement = []
+        for key, value in data:
+            set_statement.append(f"{key} = ?")
+        set_string = ', '.join(set_statement)
+        where_statement = f"{where[0]} = {where[1]}"
+
+        sql = f"""
+        UPDATE {table} SET {set_string} WHERE {where_statement};
+        """
+        logging.info(msg=sql)
+
+        with closing(self.connection.cursor()) as cursor:
+            try:
+                res = cursor.execute(sql, (values,))
+            except sqlite3.Error as e:
+                return str(e)
+            logging.log(logging.INFO, f"Updated data {data} from table {table}.")
+        self.connection.commit()
+        return
 
     def delete(self, database_cell: DatabaseCell) -> Optional[str]:
         table = database_cell.table
