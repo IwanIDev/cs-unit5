@@ -22,5 +22,14 @@ async def get_from_isbn(isbn: str) -> Tuple[Optional[Book], bool]:
         return None, False
     item = result['items'][0]
     logging.info(msg=f"Book name {item['volumeInfo']['title']} found.")
+    date_of_publishing_string = item['volumeInfo']['publishedDate']
+    try:
+        publishing_date = datetime.strptime(date_of_publishing_string, "%Y-%m-%d")
+    except ValueError as e:
+        try:
+            publishing_date = datetime.strptime(date_of_publishing_string, "%Y")
+        except ValueError as e:
+            logging.warning(f"Couldn't save book date {date_of_publishing_string}, so just using now.")
+            publishing_date = datetime.now()
     return Book(title=item['volumeInfo']['title'], author=item['volumeInfo']['authors'][0], isbn=isbn,
-                date_of_publishing=datetime.strptime(item['volumeInfo']['publishedDate'], "%Y-%m-%d")), True
+                date_of_publishing=publishing_date), True

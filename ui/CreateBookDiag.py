@@ -29,9 +29,11 @@ class CreateBookDiag(QtWidgets.QDialog):
         try:
             book, success = asyncio.run(get_from_isbn(str(isbn)))
         except ValueError:
+            logging.log(msg=f"Value error in isbn {isbn}")
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
             return
         if not success:
+            logging.log(msg=f"Database failure in isbn {isbn}.")
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
             return
         result = add_book_to_database(book=book, database=database)
