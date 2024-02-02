@@ -63,6 +63,8 @@ class UserListPage(Screen):
         self.add_user_button.clicked.connect(lambda: self.create_user())
         self.delete_user_button = self.findChild(QtWidgets.QPushButton, "deleteButton")
         self.delete_user_button.clicked.connect(lambda: self.delete_user())
+        self.edit_user_button = self.findChild(QtWidgets.QPushButton, "editButton")
+        self.edit_user_button.clicked.connect(lambda: self.edit_user())
 
     def get_users(self) -> List[userman.User]:
         result, success = userman.get_all_users(database)
@@ -100,3 +102,8 @@ class UserListPage(Screen):
         self.users = self.get_users()
         self.listWidget.setRowCount(len(self.users))
         self.set_users_table()
+
+    def edit_user(self):
+        QtWidgets.QMessageBox.information(self, "Work in Progress", f"Editing users not implemented yet, sorry.")
+        return
+

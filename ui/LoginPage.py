@@ -30,9 +30,10 @@ class LoginPage(Screen):
         result, success = user_manager.login_user(username=self.username.text(), password=self.password.text(),
                                                   database=database)
         if not success:
+            logging.info(msg=f"Not success {result}, {success}")
             message = QtWidgets.QMessageBox()
             message.setIcon(QtWidgets.QMessageBox.Icon.Information)
-            message.setWindowTitle("Error occured.")
+            message.setWindowTitle("Error occurred.")
             message.setText(f"{result}.\n Please try again.")
             message.exec()
             return
@@ -46,13 +47,11 @@ class LoginPage(Screen):
 
     def register_user(self):
         result, success = user_manager.register_user(username=self.username.text(),
-                                            password=self.password.text(),
-                                            database=database)
-        logging.log(level=logging.INFO, msg=f"{result}")
-        logging.log(level=logging.INFO, msg=str(isinstance(result, str)))
-        if isinstance(result, str):
+                                                     password=self.password.text(),
+                                                     database=database)
+        if not success:
             message = QtWidgets.QMessageBox()
-            message.setWindowTitle("Error occured.")
+            message.setWindowTitle("Error occurred.")
             message.setText(f"{result}")
             message.exec()
             return
@@ -60,5 +59,4 @@ class LoginPage(Screen):
         message.setWindowTitle("User registered")
         message.setText(f"User {self.username.text()} registered successfully.")
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)
-        message.setDetailedText("Yeet")
         message.exec()

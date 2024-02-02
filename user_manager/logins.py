@@ -12,8 +12,8 @@ def register_user(database: db.Database, username, password) -> Tuple[str, bool]
         return "No items input.", False
     user_to_register = User(username=username, password=password, date_created=datetime.now())
     result = add_user_to_database(database, user_to_register)
-    if isinstance(result, int):
-        if result == 2067:
+    if result is not None:
+        if "UNIQUE constraint failed" in str(result):
             return "Username already exists.", False
         return str(result), False
     logging.info(msg=f"Registered user: {username}.")

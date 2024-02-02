@@ -25,7 +25,7 @@ class Sqlite3Database(Database):
         self.connection.commit()
         return
 
-    def create(self, database_cell: DatabaseCell) -> Optional[int]:
+    def create(self, database_cell: DatabaseCell) -> Optional[str]:
         table = database_cell.table
         data = database_cell.data
 
@@ -47,8 +47,8 @@ class Sqlite3Database(Database):
             try:
                 cursor.executemany(sql, (values,))  # Even I don't understand why this works tbh.
             except sqlite3.Error as e:
-                logging.error(msg=f"Database error: {e.sqlite_errorcode}, message: {str(e)}")
-                return e.sqlite_errorcode
+                logging.error(msg=f"Database error: {e}, message: {str(e)}")
+                return str(e)
 
         self.connection.commit()
         logging.log(logging.INFO, f"Created data {data} in table {table}.")
@@ -63,7 +63,7 @@ class Sqlite3Database(Database):
         for key, value in data.items():
             set_statement.append(f"{key} = ?")
         set_string = ', '.join(set_statement)
-        where_statement = f"{where[0]} = {where[1]}"
+        where_statement = f"{where[0]} = {f"'{where[1]}'" if type(where[1]) is str else where[1]}"
         sql = f"""
         UPDATE {table} SET {set_string} WHERE {where_statement};
         """
@@ -72,10 +72,13 @@ class Sqlite3Database(Database):
         with closing(self.connection.cursor()) as cursor:
             try:
                 res = cursor.executemany(sql, (values,))
-                logging.info(msg=str(cursor.rowcount))
+                logging.info(msg=f"Row count: {str(cursor.rowcount)}")
             except sqlite3.Error as e:
                 return str(e)
             logging.log(logging.INFO, f"Updated data {data} from table {table}.")
+            if cursor.rowcount <= 0:
+                logging.info(msg=f"Row count failed.")
+                return "No data was updated."
         self.connection.commit()
         return
 

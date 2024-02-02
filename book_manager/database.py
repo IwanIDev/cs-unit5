@@ -53,9 +53,8 @@ def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
         "author": book.author,
         "datePublished": str(book.date_published.timestamp())
     }
-    where = ("isbn", book.isbn)
+    where = ("isbn", str(book.isbn))
     database_cell = db.DatabaseCell(table="books", data=data)
-    logging.info(msg=f"{database_cell.table}, {str(database_cell.data)}")
     result = database.update(database_cell=database_cell, where=where)
     if isinstance(result, str):
         logging.error(msg=f"Database error: {result}.")

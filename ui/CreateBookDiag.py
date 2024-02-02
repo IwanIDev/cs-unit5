@@ -25,12 +25,13 @@ class CreateBookDiag(QtWidgets.QDialog):
 
     def confirm(self):
         isbn = self.isbn.text()
+        isbn = ''.join(ch for ch in isbn if ch.isdigit())
         try:
-            book = asyncio.run(get_from_isbn(str(isbn)))
+            book, success = asyncio.run(get_from_isbn(str(isbn)))
         except ValueError:
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
             return
-        if book is None:
+        if not success:
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
             return
         result = add_book_to_database(book=book, database=database)
