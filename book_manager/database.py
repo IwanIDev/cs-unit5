@@ -13,8 +13,9 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
         'datePublished': str(book.date_published.timestamp())
     }
     database_cell = db.DatabaseCell(table='books', data=data)
-    result = database.create(database_cell=database_cell)
-    if result is not None:
+    try:
+        result = database.create(database_cell=database_cell)
+    except db.DatabaseException as e:
         logging.error(msg=f"Book {book.title} couldn't be add to database, error is {result}.")
         return False
     return True
@@ -22,9 +23,10 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
 
 def get_all_books(database: db.Database) -> Tuple[List[Book], bool]:
     database_cell = db.DatabaseCell(table='books', data={})
-    result = database.read(database_cell=database_cell)
-    if isinstance(result, str):
-        logging.error(msg=f"Error reading books from database, {result}.")
+    try:
+        result = database.read(database_cell=database_cell)
+    except db.DatabaseException:
+        logging.error(msg=f"Error reading books from database, {e}.")
         return [], False
     logging.info(msg=f"Successfully read books from database.")
     books = []
@@ -38,8 +40,9 @@ def delete_book(database: db.Database, book: Book) -> bool:
         "isbn": book.isbn
     }
     database_cell = db.DatabaseCell(table="books", data=data)
-    result = database.delete(database_cell=database_cell)
-    if isinstance(result, str):
+    try:
+        result = database.delete(database_cell=database_cell)
+    except db.DatabaseException as e:
         logging.error(msg=f"Couldn't delete from database, {result}")
         return False
     logging.info(msg=f"Successfully deleted {book.title} from database.")
@@ -55,9 +58,13 @@ def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
     }
     where = ("isbn", str(book.isbn))
     database_cell = db.DatabaseCell(table="books", data=data)
-    result = database.update(database_cell=database_cell, where=where)
-    if isinstance(result, str):
-        logging.error(msg=f"Database error: {result}.")
-        return result, False
+    try:
+        result = database.update(database_cell=database_cell, where=where)
+    except db.DatabaseNoDataUpdatedException as e:
+        logging.error(msg=f"Database error, no data was updated, {str(e)}")
+        return str(e), False
+    except db.DatabaseException as e:
+        logging.error(msg=f"Database error, {str(e)}")
+        return str(e), False
     logging.info(msg=f"Successfully updated book {book.title}.")
     return "", True

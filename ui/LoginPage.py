@@ -27,32 +27,33 @@ class LoginPage(Screen):
         self.password = self.findChild(QtWidgets.QLineEdit, "passwordForm")
 
     def login_user(self):
-        result, success = user_manager.login_user(username=self.username.text(), password=self.password.text(),
-                                                  database=database)
-        if not success:
-            logging.info(msg=f"Not success {result}, {success}")
+        try:
+            user_manager.login_user(username=self.username.text(), password=self.password.text(),
+                                                      database=database)
+        except user_manager.LoginUserException as e:
             message = QtWidgets.QMessageBox()
-            message.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            message.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             message.setWindowTitle("Error occurred.")
-            message.setText(f"{result}.\n Please try again.")
+            message.setText(f"{e.__class__.__name__}: {e.message}")
             message.exec()
             return
         message = QtWidgets.QMessageBox()
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)
         message.setWindowTitle("User logged in!")
         message.setText("User logged in successfully!")
-        message.setDetailedText(f"Username: {self.username.text()}")
         message.exec()
         self.master.change_screen(1)
 
     def register_user(self):
-        result, success = user_manager.register_user(username=self.username.text(),
-                                                     password=self.password.text(),
-                                                     database=database)
-        if not success:
+        try:
+            user_manager.register_user(username=self.username.text(),
+                                                         password=self.password.text(),
+                                                         database=database)
+        except user_manager.RegisterUserException as e:
             message = QtWidgets.QMessageBox()
+            message.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             message.setWindowTitle("Error occurred.")
-            message.setText(f"{result}")
+            message.setText(f"{e.__class__.__name__}: {e.message}")
             message.exec()
             return
         message = QtWidgets.QMessageBox()

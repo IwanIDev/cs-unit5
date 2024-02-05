@@ -1,44 +1,48 @@
 import werkzeug.security as ws
 import database as db
-from typing import Tuple
 import logging
 from .user import User
 from .database import add_user_to_database
+from .exceptions import RegisterUserException, LoginUserException, UserDatabaseErrorException
 from datetime import datetime
 
 
-def register_user(database: db.Database, username, password) -> Tuple[str, bool]:
+def register_user(database: db.Database, username, password) -> bool:
     if not username or not password:
-        return "No items input.", False
+        raise RegisterUserException("Both fields must be filled.")
     user_to_register = User(username=username, password=password, date_created=datetime.now())
-    result = add_user_to_database(database, user_to_register)
-    if result is not None:
-        if "UNIQUE constraint failed" in str(result):
-            return "Username already exists.", False
-        return str(result), False
+    try:
+        result = add_user_to_database(database, user_to_register)
+    except UserDatabaseErrorException as e:
+        if "UNIQUE constraint failed" in str(e):
+            raise RegisterUserException("Username already exists.")
+        raise RegisterUserException(str(e))
     logging.info(msg=f"Registered user: {username}.")
-    return "", True
+    return True
 
 
-def login_user(database: db.Database, username: str, password: str) -> tuple:
+def login_user(database: db.Database, username: str, password: str) -> bool:
     if not username or not password:
-        return "Missing data items.", False
+        raise LoginUserException("Both fields must be filled.")
     data = {
         "username": username
     }
     database_cell = db.DatabaseCell(table="users", data=data)
-    result = database.read(database_cell)
 
-    if isinstance(result, str):
-        logging.error(msg=f"Failed to login user {username}, database error: {result}.")
-        return result, False
+    try:
+        result = database.read(database_cell)
+    except db.DatabaseException as e:
+        logging.error(msg=f"Failed to login user {username}, database error: {str(e)}.")
+        raise LoginUserException(str(e))
+
     if not result:
         logging.error(msg=f"Failed to login user {username}, no user found.")
-        return "User not found", False
+        raise LoginUserException("Login failed, username or password incorrect.")
 
     result_cell: tuple = result[0]
     if not ws.check_password_hash(result_cell[2], password):
         logging.error(msg=f"Failed to login user {username}, password incorrect.")
-        return "Wrong password", False
+        raise LoginUserException("Login failed, username or password incorrect.")
+
     logging.info(msg=f"Logged in successfully as user {result_cell[0]}.")
-    return result, True
+    return True
