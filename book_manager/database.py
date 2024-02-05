@@ -25,7 +25,7 @@ def get_all_books(database: db.Database) -> Tuple[List[Book], bool]:
     database_cell = db.DatabaseCell(table='books', data={})
     try:
         result = database.read(database_cell=database_cell)
-    except db.DatabaseException as e:
+    except db.DatabaseException:
         logging.error(msg=f"Error reading books from database, {e}.")
         return [], False
     logging.info(msg=f"Successfully read books from database.")
