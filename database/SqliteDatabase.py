@@ -1,7 +1,8 @@
 from .DatabaseCell import DatabaseCell
 from .AbstractDatabase import Database
+from .exceptions import DatabaseException, DatabaseNoDataUpdatedException
 import sqlite3
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import logging
 from contextlib import closing
 
@@ -25,7 +26,7 @@ class Sqlite3Database(Database):
         self.connection.commit()
         return
 
-    def create(self, database_cell: DatabaseCell) -> Optional[str]:
+    def create(self, database_cell: DatabaseCell) -> bool:
         table = database_cell.table
         data = database_cell.data
 
@@ -48,13 +49,13 @@ class Sqlite3Database(Database):
                 cursor.executemany(sql, (values,))  # Even I don't understand why this works tbh.
             except sqlite3.Error as e:
                 logging.error(msg=f"Database error: {e}, message: {str(e)}")
-                return str(e)
+                raise DatabaseException(str(e))
 
         self.connection.commit()
         logging.log(logging.INFO, f"Created data {data} in table {table}.")
-        return
+        return True
 
-    def update(self, database_cell: DatabaseCell, where: Tuple[str, str]) -> Optional[str]:
+    def update(self, database_cell: DatabaseCell, where: Tuple[str, str]) -> bool:
         table = database_cell.table
         data = database_cell.data
         keys = list(data.keys())
@@ -68,20 +69,18 @@ class Sqlite3Database(Database):
         sql = f"""
         UPDATE {table} SET {set_string} WHERE {where_statement};
         """
-        logging.info(msg=sql)
 
         with closing(self.connection.cursor()) as cursor:
             try:
                 res = cursor.executemany(sql, (values,))
-                logging.info(msg=f"Row count: {str(cursor.rowcount)}")
             except sqlite3.Error as e:
-                return str(e)
-            logging.log(logging.INFO, f"Updated data {data} from table {table}.")
+                raise DatabaseException(str(e))
             if cursor.rowcount <= 0:
                 logging.info(msg=f"Row count failed.")
-                return "No data was updated."
+                raise DatabaseNoDataUpdatedException("Rows updated 0, no data updated.")
         self.connection.commit()
-        return
+        logging.log(logging.INFO, f"Updated data {data} from table {table}.")
+        return True
 
     def delete(self, database_cell: DatabaseCell) -> Optional[str]:
         table = database_cell.table
@@ -107,12 +106,12 @@ class Sqlite3Database(Database):
                 else:
                     res = cursor.execute(sql)
             except sqlite3.Error as e:
-                return str(e)
+                raise DatabaseException(str(e))
             logging.log(logging.INFO, f"Deleted data {data} from table {table}.")
         self.connection.commit()
         return
 
-    def read(self, database_cell: DatabaseCell):
+    def read(self, database_cell: DatabaseCell) -> List[Tuple]:
         table = database_cell.table
         data = database_cell.data
 
@@ -138,6 +137,6 @@ class Sqlite3Database(Database):
                 else:
                     res = cursor.execute(sql)
             except sqlite3.Error as e:
-                return str(e)
+                raise DatabaseException(str(e))
             logging.log(logging.INFO, f"Queried data {data} from table {table}.")
             return res.fetchall()

@@ -1,14 +1,17 @@
 import database as db
 from .user import User
-from typing import Tuple
+from .exceptions import UserDatabaseErrorException
 
 
-def add_user_to_database(database: db.Database, user: User):
+def add_user_to_database(database: db.Database, user: User) -> bool:
     data = {
         "username": user.username,
         "password": user.password,
         "dateCreated": str(user.date_created.timestamp())
     }
     database_cell = db.DatabaseCell(table="users", data=data)
-    result = database.create(database_cell=database_cell)
-    return result, True
+    try:
+        database.create(database_cell=database_cell)
+    except db.DatabaseException as e:
+        raise UserDatabaseErrorException(str(e))
+    return True

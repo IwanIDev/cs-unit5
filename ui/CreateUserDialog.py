@@ -1,10 +1,8 @@
+import logging
 from datetime import datetime
-
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
-import logging
-from user_manager import register_user, User
-import asyncio
+from user_manager import register_user, User, RegisterUserException
 from database import database
 
 
@@ -37,11 +35,12 @@ class CreateUserDialog(QtWidgets.QDialog):
         if user is None:
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid input {username}, {password}.")
             return
-        result, success = register_user(username=username, password=password, database=database)
-        if not success:
-            QtWidgets.QMessageBox.warning(self, "Error", f"User couldn't be added to database. \
-            {result}.")
-            logging.critical(msg=f"User couldn't be added to database. {result}")
+        try:
+            register_user(username=username, password=password, database=database)
+        except RegisterUserException as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"{e.__class__.__name__}: {e.message}")
+            logging.critical(msg=f"User couldn't be added to database. {e.__class__.__name__}: {e.message}")
+            return
         message = QtWidgets.QMessageBox()
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)
         message.setWindowTitle("User Created")
