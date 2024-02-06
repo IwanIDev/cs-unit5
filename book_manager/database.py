@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from typing import List, Tuple
 from .book import Book
+from .exceptions import BookDatabaseException
 import database as db
 
 
@@ -16,8 +17,8 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
     try:
         result = database.create(database_cell=database_cell)
     except db.DatabaseException as e:
-        logging.error(msg=f"Book {book.title} couldn't be add to database, error is {result}.")
-        return False
+        logging.error(msg=f"Book {book.title} couldn't be add to database, error is {str(e)}.")
+        raise BookDatabaseException(str(e))
     return True
 
 

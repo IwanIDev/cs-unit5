@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 import logging
-from book_manager import get_from_isbn, add_book_to_database
+from book_manager import get_from_isbn, add_book_to_database, IsbnInvalidException, BookDatabaseException
 import asyncio
 from database import database
 
@@ -27,20 +27,23 @@ class CreateBookDiag(QtWidgets.QDialog):
         isbn = self.isbn.text()
         isbn = ''.join(ch for ch in isbn if ch.isdigit())
         try:
-            book, success = asyncio.run(get_from_isbn(str(isbn)))
+            success = asyncio.run(get_from_isbn(str(isbn)))
         except ValueError:
-            logging.log(msg=f"Value error in isbn {isbn}")
+            logging.critical(msg=f"Value error in isbn {isbn}")
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
             return
-        if not success:
-            logging.log(msg=f"Database failure in isbn {isbn}.")
-            QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")
+        except IsbnInvalidException as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"{e.__class__.__name__}: {e.message}")
+            logging.critical(msg=f"Book couldn't be created, invalid ISBN. {e.__class__.__name__}: {e.message}")
             return
-        result = add_book_to_database(book=book, database=database)
-        if not result:
-            QtWidgets.QMessageBox.warning(self, "Error", f"Book couldn't be added to database. \
-            See logs for details")
-            logging.critical(msg=f"Book couldn't be added to database.")
+
+        try:
+            result = add_book_to_database(book=book, database=database)
+        except BookDatabaseException as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"{e.__class__.__name__}: {e.message}")
+            logging.critical(msg=f"Book couldn't be added to database: {e.__class__.__name__}: {e.message}")
+            return
+
         message = QtWidgets.QMessageBox()
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)
         message.setWindowTitle("Book Created")
