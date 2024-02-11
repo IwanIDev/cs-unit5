@@ -52,7 +52,6 @@ class Sqlite3Database(Database):
                 raise DatabaseException(str(e))
 
         self.connection.commit()
-        logging.log(logging.INFO, f"Created data {data} in table {table}.")
         return True
 
     def update(self, database_cell: DatabaseCell, where: Tuple[str, str]) -> bool:
@@ -79,7 +78,6 @@ class Sqlite3Database(Database):
                 logging.info(msg=f"Row count failed.")
                 raise DatabaseNoDataUpdatedException("Rows updated 0, no data updated.")
         self.connection.commit()
-        logging.log(logging.INFO, f"Updated data {data} from table {table}.")
         return True
 
     def delete(self, database_cell: DatabaseCell) -> Optional[str]:
@@ -101,13 +99,11 @@ class Sqlite3Database(Database):
         with closing(self.connection.cursor()) as cursor:
             try:
                 if value:
-                    logging.info(msg=f"{value}")
                     res = cursor.execute(sql, (value,))
                 else:
                     res = cursor.execute(sql)
             except sqlite3.Error as e:
                 raise DatabaseException(str(e))
-            logging.log(logging.INFO, f"Deleted data {data} from table {table}.")
         self.connection.commit()
         return
 
@@ -128,7 +124,6 @@ class Sqlite3Database(Database):
                    """
             value = str(list(data.values())[0])
 
-        logging.log(logging.INFO, f"{value}")
 
         with closing(self.connection.cursor()) as cursor:
             try:
@@ -138,5 +133,4 @@ class Sqlite3Database(Database):
                     res = cursor.execute(sql)
             except sqlite3.Error as e:
                 raise DatabaseException(str(e))
-            logging.log(logging.INFO, f"Queried data {data} from table {table}.")
             return res.fetchall()

@@ -3,3 +3,4 @@ httpx~=0.25.0
 PyQt6~=6.6.1
 pyinstaller
 platformdirs
+pillow~=10.2.0

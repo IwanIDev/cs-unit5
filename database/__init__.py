@@ -14,7 +14,7 @@ database = Sqlite3Database(database_url=str(get_platform_dir() / "database.sqlit
                                          "dateCreated INTEGER NOT NULL"],
                                "books": [
                                    "bookid INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT",
-                                   "title TEXT NOT NULL",
+                                   "title TEXT NOT NULL UNIQUE",
                                    "author TEXT NOT NULL",
                                    "isbn TEXT NOT NULL",
                                    "datePublished INTEGER NOT NULL"

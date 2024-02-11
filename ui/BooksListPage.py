@@ -5,6 +5,7 @@ from PyQt6 import QtCore, uic, QtWidgets
 from pathlib import Path
 from .CreateBookDiag import CreateBookDiag
 from .EditBooksDialog import EditBooksDialog
+from .ImageWidget import ImageWidget
 import book_manager as bookman
 from database import database
 
@@ -54,9 +55,7 @@ class BooksListPage(Screen):
         self.homeButton.clicked.connect(lambda: self.master.change_screen(1))
         self.usersButton.clicked.connect(lambda: self.master.change_screen(3))
 
-        self.listWidget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
-        self.listWidget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
-        self.listWidget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.listWidget = self.findChild(QtWidgets.QGridLayout, "booksList")
         self.refresh_books()
 
         self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
@@ -75,9 +74,9 @@ class BooksListPage(Screen):
 
     def set_books_table(self):
         for count, item in enumerate(self.books):
-            self.listWidget.setItem(count, 0, QtWidgets.QTableWidgetItem(item.title))
-            self.listWidget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.author))
-            self.listWidget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
+            book = ImageWidget(parent=self.master, book=item)
+            logging.info(msg=f"{book}")
+            self.listWidget.addWidget(book)
 
     def create_book(self):
         diag = CreateBookDiag(self.master)
@@ -113,5 +112,4 @@ class BooksListPage(Screen):
 
     def refresh_books(self):
         self.books = self.get_books()
-        self.listWidget.setRowCount(len(self.books))
         self.set_books_table()

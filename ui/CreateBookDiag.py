@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 import logging
-from book_manager import get_from_isbn, add_book_to_database, IsbnInvalidException, BookDatabaseException
+from book_manager import get_from_isbn, add_book_to_database, IsbnInvalidException, BookDatabaseException, Book
 import asyncio
 from database import database
 
@@ -17,6 +17,7 @@ class CreateBookDiag(QtWidgets.QDialog):
         uic.loadUi(uifile=file, baseinstance=self)
         file.close()
 
+        self.setFixedSize(400, 300)
         self.button_box = self.findChild(QtWidgets.QDialogButtonBox, "buttonBox")
         self.save_button = self.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Save)
         self.save_button.clicked.connect(lambda: self.confirm())
@@ -27,7 +28,7 @@ class CreateBookDiag(QtWidgets.QDialog):
         isbn = self.isbn.text()
         isbn = ''.join(ch for ch in isbn if ch.isdigit())
         try:
-            success = asyncio.run(get_from_isbn(str(isbn)))
+            book = asyncio.run(get_from_isbn(str(isbn)))
         except ValueError:
             logging.critical(msg=f"Value error in isbn {isbn}")
             QtWidgets.QMessageBox.warning(self, "Error", f"Invalid ISBN {self.isbn.text()}.")

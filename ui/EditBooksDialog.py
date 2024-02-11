@@ -17,6 +17,7 @@ class EditBooksDialog(QtWidgets.QDialog):
         uic.loadUi(uifile=file, baseinstance=self)
         file.close()
 
+        self.setFixedSize(400, 300)
         self.button_box = self.findChild(QtWidgets.QDialogButtonBox, "buttonBox")
         self.save_button = self.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Save)
         self.save_button.clicked.connect(lambda: self.confirm())
