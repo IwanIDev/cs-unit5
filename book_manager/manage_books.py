@@ -29,7 +29,11 @@ async def get_from_isbn(isbn: str) -> Book:
     logging.info(msg=f"Book name {item['volumeInfo']['title']} found.")
     date_of_publishing_string = item['volumeInfo']['publishedDate']
 
-    image_url = item['volumeInfo']['imageLinks']['thumbnail']
+    try:
+        image_url = item['volumeInfo']['imageLinks']['thumbnail']
+    except KeyError as e:
+        logging.warning(f"No thumbnail found for {isbn}")
+        #  Todo this still doesn't work though.
     image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
     async with httpx.AsyncClient() as client:
         image_response = await client.get(url=image_url)

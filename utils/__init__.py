@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import sys
 from os import getenv
@@ -14,7 +15,9 @@ def get_platform_dir() -> Path:
         os_path = getenv("XDG_DATA_HOME", "~/.local/share")
 
     # join with SwagLyrics dir
-    path = Path(os_path) / "LibraryApp"
+    path = Path(os_path).resolve()
+    path = Path.joinpath(path, "LibraryApp")
+    logging.warn(msg=f"{path}")
     path.mkdir(parents=True, exist_ok=True)
     return path.expanduser()
 
