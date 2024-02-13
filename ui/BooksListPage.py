@@ -1,13 +1,28 @@
 import logging
 from typing import List
+from utils import get_platform_dir
 from .screen import Screen
-from PyQt6 import QtCore, uic, QtWidgets
+from PyQt6 import QtCore, uic, QtWidgets, QtGui
 from pathlib import Path
 from .CreateBookDiag import CreateBookDiag
 from .EditBooksDialog import EditBooksDialog
 from .ImageWidget import ImageWidget
 import book_manager as bookman
 from database import database
+
+
+def get_image(isbn) -> QtGui.QImage:
+    image_path = get_platform_dir() / f"{isbn}.jpg"  # Kinda hardcoded path, but whatever
+    try:
+        with open(image_path, 'rb') as image_file:
+            content = image_file.read()
+        image = QtGui.QImage()
+        image.loadFromData(content)
+    except FileNotFoundError as e:
+        logging.warning(msg=f"Could not load image {image_path} as it doesn't exist.")
+        image = QtGui.QImage(QtCore.QSize(175, 175), QtGui.QImage.Format.Format_Indexed8)
+        image.fill(QtGui.qRgb(255, 255, 255))  # Creates a white image instead.
+    return image
 
 
 class ConfirmDeleteDialog(QtWidgets.QDialog):
@@ -55,7 +70,10 @@ class BooksListPage(Screen):
         self.homeButton.clicked.connect(lambda: self.master.change_screen(1))
         self.usersButton.clicked.connect(lambda: self.master.change_screen(3))
 
-        self.listWidget = self.findChild(QtWidgets.QGridLayout, "booksList")
+        self.list_widget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
+        self.list_widget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
+        self.list_widget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.list_widget.setColumnCount(4)
         self.refresh_books()
 
         self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
@@ -74,9 +92,16 @@ class BooksListPage(Screen):
 
     def set_books_table(self):
         for count, item in enumerate(self.books):
-            book = ImageWidget(parent=self.master, book=item)
-            logging.info(msg=f"{book}")
-            self.listWidget.addWidget(book)
+            image = QtGui.QPixmap.fromImage(get_image(item.isbn))
+            image_widget = QtWidgets.QLabel("")
+            image_widget.setPixmap(image)
+            image_widget.resize(image.width(), image.height())
+            self.list_widget.setCellWidget(count, 0, image_widget)
+            self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
+            self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
+            self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
+            self.list_widget.resizeColumnToContents(0)
+            self.list_widget.resizeRowToContents(count)
 
     def create_book(self):
         diag = CreateBookDiag(self.master)
@@ -85,7 +110,7 @@ class BooksListPage(Screen):
         self.refresh_books()
 
     def delete_book(self):
-        book_id = self.listWidget.currentRow()
+        book_id = self.list_widget.currentRow()
         book = self.books[book_id]
         dialog = ConfirmDeleteDialog(parent=self.master, book=book)
         result = dialog.exec()
@@ -100,7 +125,7 @@ class BooksListPage(Screen):
         self.refresh_books()
 
     def edit_book(self):
-        book_id = self.listWidget.currentRow()
+        book_id = self.list_widget.currentRow()
         book = self.books[book_id]
         dialog = EditBooksDialog(master=self.master, book=book)
         result = dialog.exec()
@@ -112,4 +137,5 @@ class BooksListPage(Screen):
 
     def refresh_books(self):
         self.books = self.get_books()
+        self.list_widget.setRowCount(len(self.books))
         self.set_books_table()

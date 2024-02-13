@@ -19,9 +19,13 @@ class ImageWidget(QtWidgets.QWidget):
         uic.loadUi(uifile=file, baseinstance=self)
         file.close()
 
-        self.image_frame = self.findChild(QtWidgets.QVBoxLayout, 'imageFrame')
-        self.image = self.get_image()
-        self.image_frame.addWidget(self.image)
+        self.layout = self.findChild(QtWidgets.QVBoxLayout, "verticalLayout")
+        self.image = QtGui.QPixmap.fromImage(self.get_image())
+        self.image_widget = QtWidgets.QLabel("")
+        self.image_widget.setPixmap(self.image)
+        self.image_widget.resize(self.image.width(), self.image.height())
+        self.layout.insertWidget(0, self.image_widget)
+
         self.title = self.findChild(QtWidgets.QLabel, 'title')
         self.title.setText(self.book.title)
 
@@ -31,11 +35,13 @@ class ImageWidget(QtWidgets.QWidget):
         self.date_published = self.findChild(QtWidgets.QLabel, 'datePublished')
         self.date_published.setText(self.book.date_published.strftime("%d/%m/%Y"))
 
-    def get_image(self):
-        image_path = get_platform_dir().resolve() / f"{self.book.isbn}.jpg"  # Kinda hardcoded path, but whatever
+    def get_image(self) -> QtGui.QImage:
+        image_path = get_platform_dir() / f"{self.book.isbn}.jpg"  # Kinda hardcoded path, but whatever
         try:
-            image_pil = Image.open(image_path)
-            image = ImageQt.ImageQt(image_pil)
+            with open(image_path, 'rb') as image_file:
+                content = image_file.read()
+            image = QtGui.QImage()
+            image.loadFromData(content)
         except FileNotFoundError as e:
             logging.warning(msg=f"Could not load image {image_path} as it doesn't exist.")
             image = QtGui.QImage(QtCore.QSize(175, 175), QtGui.QImage.Format.Format_Indexed8)
@@ -44,7 +50,4 @@ class ImageWidget(QtWidgets.QWidget):
             logging.warning(msg=f"Could not load image {image_path} as it isn't an image?")
             image = QtGui.QImage(QtCore.QSize(175, 175), QtGui.QImage.Format.Format_Indexed8)
             image.fill(QtGui.qRgb(255, 255, 255))
-        pixmap = QtGui.QPixmap.fromImage(image)
-        label = QtWidgets.QLabel()
-        label.setPixmap(pixmap)
-        return label
+        return image

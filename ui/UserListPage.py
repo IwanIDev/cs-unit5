@@ -37,6 +37,7 @@ class ConfirmDeleteDialog(QtWidgets.QDialog):
 class UserListPage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Users Page")
+        self.users = []
         self.master = master
         path = Path(__file__).parent.resolve()
         path = path.joinpath("qt", "UserListPage.ui")
@@ -55,9 +56,7 @@ class UserListPage(Screen):
         self.listWidget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
         self.listWidget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.listWidget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.users = self.get_users()
-        self.listWidget.setRowCount(len(self.users))
-        self.set_users_table()
+        self.refresh_users()
 
         self.add_user_button = self.findChild(QtWidgets.QPushButton, "addButton")
         self.add_user_button.clicked.connect(lambda: self.create_user())
@@ -65,6 +64,11 @@ class UserListPage(Screen):
         self.delete_user_button.clicked.connect(lambda: self.delete_user())
         self.edit_user_button = self.findChild(QtWidgets.QPushButton, "editButton")
         self.edit_user_button.clicked.connect(lambda: self.edit_user())
+
+    def refresh_users(self):
+        self.users = self.get_users()
+        self.listWidget.setRowCount(len(self.users))
+        self.set_users_table()
 
     def get_users(self) -> List[userman.User]:
         result, success = userman.get_all_users(database)
@@ -82,9 +86,7 @@ class UserListPage(Screen):
         diag = CreateUserDialog(self.master)
         diag.setWindowTitle("Create User")
         diag.exec()
-        self.users = self.get_users()
-        self.listWidget.setRowCount(len(self.users))
-        self.set_users_table()
+        self.refresh_users()
 
     def delete_user(self):
         user_id = self.listWidget.currentRow()
@@ -99,9 +101,7 @@ class UserListPage(Screen):
             QtWidgets.QMessageBox.critical(self, "Error", "User couldn't be deleted, check logs for error.")
             return
         QtWidgets.QMessageBox.information(self, "User deleted", f"User {user.username} deleted.")
-        self.users = self.get_users()
-        self.listWidget.setRowCount(len(self.users))
-        self.set_users_table()
+        self.refresh_users()
 
     def edit_user(self):
         QtWidgets.QMessageBox.information(self, "Work in Progress", f"Editing users not implemented yet, sorry.")

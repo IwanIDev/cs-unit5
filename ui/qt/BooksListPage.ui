@@ -40,7 +40,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QGridLayout" name="booksList" rowstretch="0"/>
+    <widget class="QTableWidget" name="tableWidget"/>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">

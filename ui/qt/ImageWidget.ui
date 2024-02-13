@@ -24,9 +24,6 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QVBoxLayout" name="imageFrame"/>
-    </item>
-    <item>
      <widget class="QLabel" name="title">
       <property name="maximumSize">
        <size>
