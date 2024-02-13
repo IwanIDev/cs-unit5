@@ -3,13 +3,17 @@ from book_manager import Book
 import json
 import logging
 from datetime import datetime
-from utils import isbn_check_digit, get_platform_dir, isbn_checksum
+from utils import get_platform_dir, isbn_checksum, length_check
 from .exceptions import IsbnInvalidException
 import shutil
 
 
 async def get_from_isbn(isbn: str) -> Book:
     if not isbn_checksum(isbn):
+        logging.warning(msg=f"Invalid ISBN: {isbn}")
+        raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
+
+    if not length_check(isbn, 0, 10):
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
 
