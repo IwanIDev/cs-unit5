@@ -15,31 +15,6 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="homeButton">
-       <property name="text">
-        <string>Home</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="booksButton">
-       <property name="text">
-        <string>Books</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="usersButton">
-       <property name="text">
-        <string>Users</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
     <widget class="QTableWidget" name="tableWidget">
      <property name="columnCount">
       <number>4</number>

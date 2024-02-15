@@ -62,13 +62,6 @@ class BooksListPage(Screen):
         file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly)
         uic.loadUi(uifile=file, baseinstance=self)
         file.close()
-        
-        self.bookButton = self.findChild(QtWidgets.QPushButton, "booksButton")
-        self.homeButton = self.findChild(QtWidgets.QPushButton, "homeButton")
-        self.usersButton = self.findChild(QtWidgets.QPushButton, "usersButton")
-        self.bookButton.clicked.connect(lambda: self.master.change_screen(2))
-        self.homeButton.clicked.connect(lambda: self.master.change_screen(1))
-        self.usersButton.clicked.connect(lambda: self.master.change_screen(3))
 
         self.list_widget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
         self.list_widget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
