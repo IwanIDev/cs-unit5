@@ -5,3 +5,4 @@ pyinstaller
 platformdirs
 pillow~=10.2.0
 pyqtdarktheme~=2.1.0
+fastapi~=0.109.2

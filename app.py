@@ -9,7 +9,7 @@ import qdarktheme
 if __name__ == "__main__":
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s")
     app = QtWidgets.QApplication(sys.argv)
-    qdarktheme.setup_theme()
+    #qdarktheme.setup_theme()
     window = App()
     window.show()
     app.exec()
