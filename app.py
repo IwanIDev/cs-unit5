@@ -4,6 +4,13 @@ import logging
 import os
 from PyQt6 import QtWidgets
 import qdarktheme
+from pathlib import Path
+
+
+def get_stylesheet(stylesheet: Path):
+    with open(stylesheet, "r") as f:
+        style = f.read()
+    return style
 
 
 if __name__ == "__main__":
