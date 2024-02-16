@@ -2,6 +2,7 @@ import PyQt6.QtWidgets as QtWidgets
 from .HomePage import HomePage
 from .BooksListPage import BooksListPage
 from .UserListPage import UserListPage
+from .Settings import Settings
 
 
 class MainWindow(QtWidgets.QTabWidget):
@@ -10,7 +11,8 @@ class MainWindow(QtWidgets.QTabWidget):
         self.screens = {
             'Home': HomePage(self),
             'Books': BooksListPage(self),
-            'Users': UserListPage(self)
+            'Users': UserListPage(self),
+            'Settings': Settings(self)
         }
         for name, screen in self.screens.items():
             self.addTab(screen, name)
