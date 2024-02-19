@@ -13,7 +13,7 @@ class MainWindow(QtWidgets.QTabWidget):
             'Books': BooksListPage(self),
             'Users': UserListPage(self),
             'Settings': Settings(self)
-        }
+        }  # TODO: Access control here, don't show screens not accessible by user.
         for name, screen in self.screens.items():
             self.addTab(screen, name)
 

@@ -15,6 +15,6 @@ def get_stylesheet(stylesheet: Path):
 if __name__ == "__main__":
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s")
     app = QtWidgets.QApplication(sys.argv)
-    window = App()
+    window = App(app)
     window.show()
     app.exec()

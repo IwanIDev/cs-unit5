@@ -124,7 +124,6 @@ class Sqlite3Database(Database):
                    """
             value = str(list(data.values())[0])
 
-
         with closing(self.connection.cursor()) as cursor:
             try:
                 if value:
@@ -134,3 +133,15 @@ class Sqlite3Database(Database):
             except sqlite3.Error as e:
                 raise DatabaseException(str(e))
             return res.fetchall()
+
+    def backup(self):
+        backup = ""
+        for line in self.connection.iterdump():
+            logging.info(msg=f"{line}")
+            backup += line
+        return backup
+
+    def restore_from_backup(self, backup: str):
+        with closing(self.connection.cursor()) as cursor:
+            cursor.executescript(backup)
+        self.connection.commit()

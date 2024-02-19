@@ -3,8 +3,9 @@ from pathlib import Path
 from PyQt6 import uic
 import PyQt6.QtCore as QtCore
 import PyQt6.QtWidgets as QtWidgets
-from backup_manager import export_tables_to_csv
+from backup_manager import export_tables_to_csv, sql_backup
 from database import database
+
 
 class Settings(Screen):
     def __init__(self, master):

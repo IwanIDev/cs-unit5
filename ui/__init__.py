@@ -9,7 +9,7 @@ import logging
 
 
 class App(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self, master):
         super().__init__()
         self.setWindowTitle("Unit 5")
         self.setFixedSize(800, 600)
@@ -19,6 +19,10 @@ class App(QtWidgets.QMainWindow):
         self.title = QtWidgets.QLabel(parent=self)
         self.title.setText("")
         self._layout.addWidget(self.title)
+
+        self.loading_box = QtWidgets.QDialog()
+        self.loading_box.show()
+
         self._screens = [
             LoginPage(self),
             MainWindow(self)
@@ -28,6 +32,7 @@ class App(QtWidgets.QMainWindow):
             self.stacked_widget.addWidget(stacked_screen)
         self._layout.addWidget(self.stacked_widget)
         self.setCentralWidget(self.stacked_widget)
+        self.loading_box.done(0)
         self.change_screen(0)
 
     def change_screen(self, new_screen: int):

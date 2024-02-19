@@ -19,3 +19,10 @@ class Database(ABC):
     @abstractmethod
     def delete(self, database_cell: DatabaseCell):
         pass
+
+    @abstractmethod
+    def backup(self):
+        pass
+
+    def restore_from_backup(self, backup: str):
+        pass
