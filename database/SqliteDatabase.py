@@ -5,25 +5,23 @@ import sqlite3
 from typing import Optional, Tuple, List
 import logging
 from contextlib import closing
+from pathlib import Path
 
 
 class Sqlite3Database(Database):
-    def __init__(self, database_url, tables):
+    def __init__(self, database_url, script: Path):
         self.connection = sqlite3.connect(database_url)
-        self.tables = tables
-        self.create_tables(tables)
+        self.create_tables(script)
 
-    def create_tables(self, tables):
-        cursor = self.connection.cursor()
-        for table, data in tables.items():
-            table_schema = "("
-            table_schema += ', '.join(data)
-            table_schema += ")"
-            print(table_schema)
-            cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS {table}{table_schema};
-            """)
-        self.connection.commit()
+    def create_tables(self, script):
+        with closing(self.connection.cursor()) as cursor:
+            script_str = ""
+            with open(str(script), "r") as f:
+                script_str = f.read()
+            try:
+                cursor.executescript(script_str)
+            except sqlite3.DatabaseError as e:
+                logging.error(f"Error occurred in database: {e}.")
         return
 
     def create(self, database_cell: DatabaseCell) -> bool:
