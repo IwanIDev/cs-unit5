@@ -2,6 +2,9 @@ from .screen import Screen
 from PyQt6 import QtCore, uic
 from pathlib import Path
 from PyQt6 import QtWidgets
+from recommendations import get_suggested_books
+from database import database
+import asyncio
 
 
 class HomePage(Screen):
@@ -16,4 +19,6 @@ class HomePage(Screen):
         file.close()
 
         self.listWidget = self.findChild(QtWidgets.QListWidget, "listWidget")
-        self.listWidget.addItem('test')
+        self.suggested_books = asyncio.run(get_suggested_books(database))
+        for book in self.suggested_books:
+            self.listWidget.addItem(str(book))

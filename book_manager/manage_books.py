@@ -5,10 +5,12 @@ import logging
 from datetime import datetime
 from utils import get_platform_dir, isbn_checksum, length_check
 from .exceptions import IsbnInvalidException
-import shutil
+from .database import get_author_id
+from typing import Dict
+import database as db
 
 
-async def get_from_isbn(isbn: str) -> Book:
+def get_from_isbn(isbn: str, database: db.Database) -> Book:
     if not isbn_checksum(isbn):
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
@@ -17,8 +19,8 @@ async def get_from_isbn(isbn: str) -> Book:
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url=f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
+    with httpx.Client() as client:
+        response = client.get(url=f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
     if response.status_code != httpx.codes.OK:
         logging.warning(f'Status code not okay: {response.status_code}.')
         raise IsbnInvalidException(f"Failed to get book from API, response {response.status_code}.")
@@ -30,22 +32,50 @@ async def get_from_isbn(isbn: str) -> Book:
         raise IsbnInvalidException(f"No books found for ISBN {isbn}.")
 
     item = result['items'][0]
-    logging.info(msg=f"Book name {item['volumeInfo']['title']} found.")
-    date_of_publishing_string = item['volumeInfo']['publishedDate']
+    book = get_book_from_google_api_volume(item, database)
+    return book
 
+
+def get_thumbnail(book: Dict, isbn: str) -> str:
     try:
-        image_url = item['volumeInfo']['imageLinks']['thumbnail']
+        image_url = book['volumeInfo']['imageLinks']['thumbnail']
     except KeyError as e:
         logging.warning(f"No thumbnail found for {isbn}")
-        #  Todo this still doesn't work though.
-    image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
-    async with httpx.AsyncClient() as client:
-        image_response = await client.get(url=image_url)
+        return ""
+    with httpx.Client() as client:
+        image_response = client.get(url=image_url)
     if image_response.status_code != httpx.codes.OK:
         logging.warning(f'Status code not okay in cover image: {image_response.status_code}.')
+        return ""
+    return image_response
+
+
+def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
+    logging.info(msg=f"Book name {item['volumeInfo']['title']} found.")
+    isbn = 0
+    try:
+        isbn_list = item['volumeInfo']['industryIdentifiers']
+        for isbn_dict in isbn_list:
+            if isbn_dict['type'] != "ISBN_10":
+                continue
+            isbn = isbn_dict['identifier']
+            break
+    except KeyError:
+        pass
+    date_of_publishing_string = item['volumeInfo']['publishedDate']
+    try:
+        genre_name = item['volumeInfo']['categories'][0]
+    except KeyError:
+        genre_name = ""
+    author_name = item['volumeInfo']['authors'][0]
+    author = get_author_id(author_name, database)
+
+    image_response = get_thumbnail(item, isbn)
+    image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
 
     with open(image_path, 'wb') as f:  # This just saves the image to a file without asking any questions.
-        f.write(image_response.content)
+        if image_response:
+            f.write(image_response.content)
 
     try:
         publishing_date = datetime.strptime(date_of_publishing_string, "%Y-%m-%d")
@@ -55,5 +85,6 @@ async def get_from_isbn(isbn: str) -> Book:
         except ValueError as e:
             logging.warning(f"Couldn't save book date {date_of_publishing_string}, so just using now.")
             publishing_date = datetime.now()
-    return Book(title=item['volumeInfo']['title'], author=item['volumeInfo']['authors'][0], isbn=isbn,
-                date_of_publishing=publishing_date)
+    return Book(title=item['volumeInfo']['title'], author=author, isbn=isbn,
+                date_of_publishing=publishing_date, genre=genre_name)
+

@@ -12,6 +12,11 @@ class Sqlite3Database(Database):
     def __init__(self, database_url, script: Path):
         self.connection = sqlite3.connect(database_url)
         self.create_tables(script)
+        self.tables = self.get_all_tables()
+        logging.warning(f"Database created successfully, tables {self.tables}")
+        result = self.connection.execute("SELECT * FROM Books;")
+        names = [description[0] for description in result.description]
+        logging.warning(f"Result {names}")
 
     def create_tables(self, script):
         with closing(self.connection.cursor()) as cursor:
@@ -20,9 +25,24 @@ class Sqlite3Database(Database):
                 script_str = f.read()
             try:
                 cursor.executescript(script_str)
-            except sqlite3.DatabaseError as e:
+            except sqlite3.Error as e:
                 logging.error(f"Error occurred in database: {e}.")
         return
+
+    def get_all_tables(self) -> List:
+        tables = []
+        with closing(self.connection.cursor()) as cursor:
+            query = """
+            SELECT name FROM sqlite_master WHERE type='table';
+            """
+            try:
+                tables = cursor.execute(query).fetchall()
+            except sqlite3.DatabaseError as e:
+                raise DatabaseException(f"Error occurred in database: {e}")
+        output = []
+        for table in tables:
+            output.append(table[0])
+        return output
 
     def create(self, database_cell: DatabaseCell) -> bool:
         table = database_cell.table

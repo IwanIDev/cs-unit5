@@ -1,7 +1,7 @@
 import sys
+from datetime import datetime
 from ui import App
 import logging
-import os
 from PyQt6 import QtWidgets
 from pathlib import Path
 
@@ -13,7 +13,11 @@ def get_stylesheet(stylesheet: Path):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"), format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(levelname)8.8s] %(message)s",
+        handlers=[logging.StreamHandler()],
+    )
     app = QtWidgets.QApplication(sys.argv)
     window = App(app)
     window.show()
