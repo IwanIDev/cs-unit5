@@ -15,10 +15,6 @@ def get_from_isbn(isbn: str, database: db.Database) -> Book:
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
 
-    if not length_check(isbn, 0, 10):
-        logging.warning(msg=f"Invalid ISBN: {isbn}")
-        raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
-
     with httpx.Client() as client:
         response = client.get(url=f'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}')
     if response.status_code != httpx.codes.OK:
