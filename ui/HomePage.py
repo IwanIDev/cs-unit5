@@ -20,5 +20,7 @@ class HomePage(Screen):
 
         self.listWidget = self.findChild(QtWidgets.QListWidget, "listWidget")
         self.suggested_books = asyncio.run(get_suggested_books(database))
+        if not self.suggested_books:
+            self.listWidget.addItem(str("No suggestions, try adding some books to your library."))
         for book in self.suggested_books:
             self.listWidget.addItem(str(book))

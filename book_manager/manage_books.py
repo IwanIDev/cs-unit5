@@ -69,9 +69,12 @@ def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
     image_response = get_thumbnail(item, isbn)
     image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
 
-    with open(image_path, 'wb') as f:  # This just saves the image to a file without asking any questions.
-        if image_response:
-            f.write(image_response.content)
+    try:
+        with open(image_path, 'wb') as f:  # This just saves the image to a file without asking any questions.
+            if image_response:
+                f.write(image_response.content)
+    except PermissionError as e:
+        logging.error(f"Permission error in getting image {image_path}, erroring out.")
 
     try:
         publishing_date = datetime.strptime(date_of_publishing_string, "%Y-%m-%d")

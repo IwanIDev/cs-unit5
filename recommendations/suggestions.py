@@ -40,6 +40,8 @@ async def get_suggested_books(database: db.Database) -> List[Book]:
     res = pd.read_sql(sql, database.connection)
     df = pd.DataFrame(data=res, columns=['Genre', 'totalvalue'])
     df = df[df.Genre != ""]
+    if df.empty:
+        return []
     top_ten_df = df.groupby('totalvalue').head(9).reset_index()
     sample = top_ten_df.sample(n=3, replace=True)
 

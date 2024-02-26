@@ -6,6 +6,7 @@ from .MainWindow import MainWindow
 import PyQt6.QtWidgets as QtWidgets
 from .screen import Screen
 import logging
+from user_manager import User
 
 
 class App(QtWidgets.QMainWindow):
@@ -13,6 +14,7 @@ class App(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle("Unit 5")
         self.setFixedSize(800, 600)
+        self.user = None
 
         self._layout = QtWidgets.QVBoxLayout()
         self.setLayout(self._layout)

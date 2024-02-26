@@ -120,7 +120,7 @@ class BooksListPage(Screen):
     def edit_book(self):
         book_id = self.list_widget.currentRow()
         book = self.books[book_id]
-        dialog = EditBooksDialog(master=self.master, book=book)
+        dialog = EditBooksDialog(master=self.master, book=book, database=database)
         result = dialog.exec()
 
         if result != QtWidgets.QDialog.DialogCode.Accepted:

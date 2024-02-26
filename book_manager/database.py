@@ -7,6 +7,7 @@ from .exceptions import BookDatabaseException
 import database as db
 from contextlib import closing
 from typing import Optional
+import pandas as pd
 
 
 def add_book_to_database(book: Book, database: db.Database) -> bool:
@@ -23,7 +24,8 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
     database_cell = db.DatabaseCell(table='books', data=data)
     with closing(database.connection.cursor()) as cursor:
         try:
-            output = cursor.execute(sql, (data['title'], data['author'], data['isbn'], data['datePublished'], data['genre']))
+            output = cursor.execute(sql,
+                                    (data['title'], data['author'], data['isbn'], data['datePublished'], data['genre']))
         except sqlite3.Error as e:
             logging.error(msg=f"Book {book.title} couldn't be add to database, error is {str(e)}.")
             raise BookDatabaseException(str(e))
@@ -45,7 +47,9 @@ def get_all_books(database: db.Database) -> Tuple[List[Book], bool]:
     books = []
     for book in result:
         logging.warning(f"Book {book[0]}: {book}")
-        books.append(Book(title=book[0], author=book[1], isbn=book[2], date_of_publishing=datetime.fromtimestamp(book[3]), genre=book[4]))
+        books.append(
+            Book(title=book[0], author=book[1], isbn=book[2], date_of_publishing=datetime.fromtimestamp(book[3]),
+                 genre=book[4]))
     return books, True
 
 
@@ -68,18 +72,21 @@ def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
         "isbn": book.isbn,
         "title": book.title,
         "author": book.author,
-        "datePublished": str(book.date_published.timestamp())
+        "datePublished": str(book.date_published.timestamp()),
+        "genre": book.genre
     }
-    where = ("isbn", str(book.isbn))
-    database_cell = db.DatabaseCell(table="books", data=data)
-    try:
-        result = database.update(database_cell=database_cell, where=where)
-    except db.DatabaseNoDataUpdatedException as e:
-        logging.error(msg=f"Database error, no data was updated, {str(e)}")
-        return str(e), False
-    except db.DatabaseException as e:
-        logging.error(msg=f"Database error, {str(e)}")
-        return str(e), False
+    sql = """
+    UPDATE Books SET Name=?, ISBN=?, AuthorID=?, DatePublished=?, Genre=?
+    WHERE ISBN=?;
+    """
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql,
+                                 (data['title'], data['isbn'], data['author'], data['datePublished'], data['genre']))
+        except sqlite3.Error as e:
+            logging.error(msg=f"Error editing book {book.title} in database, {e}.")
+            return str(e), False
+    database.connection.commit()
     logging.info(msg=f"Successfully updated book {book.title}.")
     return "", True
 
@@ -113,3 +120,30 @@ def add_author(name: str, database: db.Database) -> Optional[int]:
         output = cursor.lastrowid
     database.connection.commit()
     return output
+
+
+def get_author_from_id(author_id: int, database: db.Database) -> Optional[str]:
+    sql = """
+    SELECT Name FROM Authors WHERE AuthorID = ?;
+    """
+    authors = []
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql, (author_id,))
+        except sqlite3.Error as e:
+            logging.error(f"Error getting author {author_id}, error {e}.")
+            return None
+        authors = res.fetchall()
+    if len(authors) <= 0:
+        return None
+    author = authors[0][0]
+    return author
+
+
+def get_all_authors(database: db.Database) -> pd.DataFrame:
+    sql = """
+    SELECT AuthorID, Name FROM Authors;
+    """
+    res = pd.read_sql_query(sql, database.connection)
+    df = pd.DataFrame(data=res, columns=['AuthorID', 'Name'])
+    return df

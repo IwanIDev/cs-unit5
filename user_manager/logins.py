@@ -21,7 +21,7 @@ def register_user(database: db.Database, username, password) -> bool:
     return True
 
 
-def login_user(database: db.Database, username: str, password: str) -> bool:
+def login_user(database: db.Database, username: str, password: str) -> User:
     if not username or not password:
         raise LoginUserException("Both fields must be filled.")
     data = {
@@ -45,4 +45,5 @@ def login_user(database: db.Database, username: str, password: str) -> bool:
         raise LoginUserException("Login failed, username or password incorrect.")
 
     logging.info(msg=f"Logged in successfully as user {result_cell[0]}.")
-    return True
+    user = User(username=result_cell[1], password=result_cell[2], date_created=datetime.fromtimestamp(result_cell[3]))
+    return user

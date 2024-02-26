@@ -28,8 +28,8 @@ class LoginPage(Screen):
 
     def login_user(self):
         try:
-            user_manager.login_user(username=self.username.text(), password=self.password.text(),
-                                                      database=database)
+            user = user_manager.login_user(username=self.username.text(), password=self.password.text(),
+                                    database=database)
         except user_manager.LoginUserException as e:
             message = QtWidgets.QMessageBox()
             message.setIcon(QtWidgets.QMessageBox.Icon.Critical)
@@ -42,13 +42,14 @@ class LoginPage(Screen):
         message.setWindowTitle("User logged in!")
         message.setText("User logged in successfully!")
         message.exec()
+        self.master.user = user
         self.master.change_screen(1)
 
     def register_user(self):
         try:
             user_manager.register_user(username=self.username.text(),
-                                                         password=self.password.text(),
-                                                         database=database)
+                                       password=self.password.text(),
+                                       database=database)
         except user_manager.RegisterUserException as e:
             message = QtWidgets.QMessageBox()
             message.setIcon(QtWidgets.QMessageBox.Icon.Critical)
