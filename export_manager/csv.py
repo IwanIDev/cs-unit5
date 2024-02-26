@@ -4,7 +4,7 @@ from database import DatabaseCell, database
 from pathlib import Path
 
 
-def export_tables_to_csv(tables: List) -> str:
+def export_tables_to_csv(tables: List):
     data = []
     for table in tables:
         database_cell = DatabaseCell(table=table, data={})
