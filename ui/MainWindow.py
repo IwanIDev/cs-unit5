@@ -3,6 +3,7 @@ from .HomePage import HomePage
 from .BooksListPage import BooksListPage
 from .UserListPage import UserListPage
 from .Settings import Settings
+from .DataVis import DataVis
 
 
 class MainWindow(QtWidgets.QTabWidget):
@@ -12,7 +13,8 @@ class MainWindow(QtWidgets.QTabWidget):
             'Home': HomePage(self),
             'Books': BooksListPage(self),
             'Users': UserListPage(self),
-            'Settings': Settings(self)
+            'Settings': Settings(self),
+            'Statistics': DataVis(self)
         }  # TODO: Access control here, don't show screens not accessible by user.
         for name, screen in self.screens.items():
             self.addTab(screen, name)
