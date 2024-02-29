@@ -22,6 +22,9 @@ class Settings(Screen):
         self.export_button.clicked.connect(lambda: self.csv_export())
 
     def csv_export(self):
+        default_path = Path.home().resolve()
+        path_str = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Directory', str(default_path))
+        path = Path(path_str).resolve()
         tables = database.tables
-        export_tables_to_csv(list(tables))
+        export_tables_to_csv(list(tables), path)
         QtWidgets.QMessageBox.information(self, "Export", "Export successful.")
