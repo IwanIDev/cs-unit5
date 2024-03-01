@@ -3,14 +3,14 @@ from typing import List, Tuple
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 from book_manager import edit_book, Book, get_author_from_id, get_all_authors
-from user_manager import User
+from user_manager import User, edit_user, UserDatabaseErrorException
 import database as db
 import pandas as pd
 
 
 class EditUserDialog(QtWidgets.QDialog):
     def __init__(self, master, user: User, database: db.Database):
-        super().__init__()
+        super().__init__(parent=master)
         self.master = master
         self.database = database
         path = Path(__file__).parent.resolve()
@@ -34,11 +34,17 @@ class EditUserDialog(QtWidgets.QDialog):
     def confirm(self):
         name = self.name.text()
         password = self.password.text()
-        user = User(username=username, password=password, date_created=self.user.date_created)
-        result, success = edit_book(book=book, database=self.database)
-        if not success:
+        user = User(username=name, password=password, date_created=self.user.date_created)
+        try:
+            result = edit_book(self.database, user)
+        except UserDatabaseErrorException as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Something went wrong, error {str(e)}")
+            self.done(QtWidgets.QMessageBox.DialogCode.Rejected)
+            return
+        if not result:
             QtWidgets.QMessageBox.critical(self, "Error", f"Something went wrong, error was {result}")
             self.done(QtWidgets.QMessageBox.DialogCode.Rejected)
+            return
         message = QtWidgets.QMessageBox()
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)
         message.setWindowTitle("Book Edited")

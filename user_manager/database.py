@@ -21,7 +21,7 @@ def add_user_to_database(database: db.Database, user: User) -> bool:
     return True
 
 
-def edit_user(database: db.Database, user: User) -> Tuple[str, bool]:
+def edit_user(database: db.Database, user: User) -> bool:
     data = {
         "username": user.username,
         "password": user.password
@@ -35,8 +35,8 @@ def edit_user(database: db.Database, user: User) -> Tuple[str, bool]:
             res = cursor.execute(sql,
                                  (data['username'], data['password'],))
         except sqlite3.Error as e:
-            logging.error(msg=f"Error editing book {book.title} in database, {e}.")
-            return str(e), False
+            logging.error(msg=f"Error editing book {user.username} in database, {e}.")
+            raise UserDatabaseErrorException(str(e))
     database.connection.commit()
-    logging.info(msg=f"Successfully updated book {book.title}.")
-    return "", True
+    logging.info(msg=f"Successfully updated book {user.username}.")
+    return True

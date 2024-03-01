@@ -4,6 +4,7 @@ from .screen import Screen
 from PyQt6 import QtCore, uic, QtWidgets
 from pathlib import Path
 from .CreateUserDialog import CreateUserDialog
+from .EditUserDialog import EditUserDialog
 import user_manager as userman
 from database import database
 
@@ -97,6 +98,7 @@ class UserListPage(Screen):
         self.refresh_users()
 
     def edit_user(self):
-        QtWidgets.QMessageBox.information(self, "Work in Progress", f"Editing users not implemented yet, sorry.")
+        user_id = self.listWidget.currentRow()
+        dialog = EditUserDialog(self, self.users[user_id], database)
         return
 
