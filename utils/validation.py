@@ -38,19 +38,17 @@ def isbn_10_validation(isbn: str) -> bool:
 
 
 def isbn_checksum(isbn: str) -> bool:
-    if length_check(str(isbn), 0, 10):
+    if length_check(str(isbn), 10, 10):
         return isbn_10_validation(isbn)
-    if length_check(str(isbn), 0, 13):
+    if length_check(str(isbn), 13, 13):
         return isbn_13_validation(isbn)
 
 
 def length_check(value: str, min_length: int, max_length: int) -> bool:
+    logging.warning(f"ISBN has length {len(value)}")
     length = len(value)
-    if length < min_length:
-        return False
-    elif length > max_length:
-        return False
-    return True
+    logging.warning(f"min length passed: {length < min_length}, max length passed: {length > max_length}")
+    return (length >= min_length) and (length <= max_length)
 
 
 def email_check(email: str) -> bool:

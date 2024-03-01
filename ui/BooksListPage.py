@@ -90,6 +90,7 @@ class BooksListPage(Screen):
             image_widget.setPixmap(image)
             image_widget.resize(image.width(), image.height())
             self.list_widget.setCellWidget(count, 0, image_widget)
+            logging.warning(f"Books {count}: {str(item)}")
             self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
             self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
             self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
