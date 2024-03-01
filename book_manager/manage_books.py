@@ -47,6 +47,7 @@ def get_thumbnail(book: Dict, isbn: str) -> str:
 
 
 def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
+    # TODO JSON Validation
     logging.info(msg=f"Book name {item['volumeInfo']['title']} found.")
     isbn = 0
     try:
@@ -58,7 +59,10 @@ def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
             break
     except KeyError:
         pass
-    date_of_publishing_string = item['volumeInfo']['publishedDate']
+    try:
+        date_of_publishing_string = item['volumeInfo']['publishedDate']
+    except KeyError:
+        date_of_publishing_string = ""
     try:
         genre_name = item['volumeInfo']['categories'][0]
     except KeyError:
