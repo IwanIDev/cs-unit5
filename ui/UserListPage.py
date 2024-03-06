@@ -4,7 +4,7 @@ from .screen import Screen
 from PyQt6 import QtCore, uic, QtWidgets
 from pathlib import Path
 from .CreateUserDialog import CreateUserDialog
-from .EditUserDialog import EditUserDialog
+from .EditUserDialog import EditUserDialog, EditUserException
 import user_manager as userman
 from database import database
 
@@ -99,6 +99,11 @@ class UserListPage(Screen):
 
     def edit_user(self):
         user_id = self.listWidget.currentRow()
-        dialog = EditUserDialog(self, self.users[user_id], database)
-        return
-
+        user: userman.User = self.users[user_id]
+        dialog: QtWidgets.QDialog = EditUserDialog(self, user, database)
+        try:
+            result = dialog.exec()
+        except EditUserException as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"An error occurred editing user, {str(e)}.")
+            return
+        QtWidgets.QMessageBox.information(self, "Edited User", f"User {user.username} edited.")

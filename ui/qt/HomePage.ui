@@ -15,17 +15,20 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QListWidget" name="listWidget"/>
+    <widget class="QTableWidget" name="books"/>
    </item>
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Maximum</enum>
+     </property>
      <property name="sizeHint" stdset="0">
       <size>
        <width>20</width>
-       <height>60</height>
+       <height>150</height>
       </size>
      </property>
     </spacer>

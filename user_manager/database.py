@@ -33,10 +33,10 @@ def edit_user(database: db.Database, user: User) -> bool:
     with closing(database.connection.cursor()) as cursor:
         try:
             res = cursor.execute(sql,
-                                 (data['username'], data['password'],))
+                                 (data['username'], data['password'], data['username'],))
         except sqlite3.Error as e:
-            logging.error(msg=f"Error editing book {user.username} in database, {e}.")
+            logging.error(msg=f"Error editing user {user.username} in database, {e}.")
             raise UserDatabaseErrorException(str(e))
     database.connection.commit()
-    logging.info(msg=f"Successfully updated book {user.username}.")
+    logging.info(msg=f"Successfully updated user {user.username}.")
     return True

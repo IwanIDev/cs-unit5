@@ -1,7 +1,7 @@
 from data_analysis import top_genres_svg
 from pathlib import Path
 import database as db
-from io import BytesIO
+from io import BytesIO, StringIO
 from datetime import datetime
 import logging
 from tempfile import NamedTemporaryFile
@@ -13,9 +13,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import reportlab.platypus as platypus
 from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing
 
 
-def svg_to_drawing_scaled(w: int, svg: str):
+def svg_to_drawing_scaled(w: int, svg: str) -> Drawing:
     with NamedTemporaryFile(delete=False, mode='w+') as tf:
         tf.write(svg)
         tf.seek(0)
