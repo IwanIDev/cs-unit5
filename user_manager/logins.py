@@ -10,7 +10,7 @@ from datetime import datetime
 def register_user(database: db.Database, username, password) -> bool:
     if not username or not password:
         raise RegisterUserException("Both fields must be filled.")
-    user_to_register = User(username=username, password=password, date_created=datetime.now())
+    user_to_register = User(username=username, password=ws.generate_password_hash(password), date_created=datetime.now())
     try:
         result = add_user_to_database(database, user_to_register)
     except UserDatabaseErrorException as e:

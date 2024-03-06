@@ -4,6 +4,7 @@ from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 from user_manager import register_user, User, RegisterUserException
 from database import database
+import werkzeug.security as ws
 
 
 class CreateUserDialog(QtWidgets.QDialog):
@@ -28,6 +29,7 @@ class CreateUserDialog(QtWidgets.QDialog):
     def confirm(self):
         username = self.username.text()
         password = self.password.text()
+        password = ws.generate_password_hash(password)
         try:
             user = User(username=username, password=password, date_created=datetime.now())
         except ValueError:

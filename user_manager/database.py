@@ -21,10 +21,11 @@ def add_user_to_database(database: db.Database, user: User) -> bool:
     return True
 
 
-def edit_user(database: db.Database, user: User) -> bool:
+def edit_user(database: db.Database, user: User, current_username: str) -> bool:
     data = {
         "username": user.username,
-        "password": user.password
+        "password": user.password,
+        "current_username": current_username
     }
     sql = """
     UPDATE Users SET Username=?, Password=?
@@ -33,7 +34,7 @@ def edit_user(database: db.Database, user: User) -> bool:
     with closing(database.connection.cursor()) as cursor:
         try:
             res = cursor.execute(sql,
-                                 (data['username'], data['password'], data['username'],))
+                                 (data['username'], data['password'], data['current_username'],))
         except sqlite3.Error as e:
             logging.error(msg=f"Error editing user {user.username} in database, {e}.")
             raise UserDatabaseErrorException(str(e))

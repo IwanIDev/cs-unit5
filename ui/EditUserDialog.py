@@ -4,6 +4,7 @@ from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 from user_manager import User, edit_user, UserDatabaseErrorException
 import database as db
+import werkzeug.security as ws
 import pandas as pd
 
 
@@ -38,9 +39,13 @@ class EditUserDialog(QtWidgets.QDialog):
     def confirm(self):
         name = self.name.text()
         password = self.password_box.text()
+        if password == "":
+            password = self.user.password
+        else:
+            password = ws.generate_password_hash(password)
         user = User(username=name, password=password, date_created=self.user.date_created)
         try:
-            result = edit_user(self.database, user)
+            result = edit_user(self.database, user, self.user.username)
         except UserDatabaseErrorException as e:
             raise EditUserException(str(e))
         if not result:
