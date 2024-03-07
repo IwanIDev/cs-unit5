@@ -51,6 +51,25 @@ class ConfirmDeleteDialog(QtWidgets.QDialog):
         self.done(QtWidgets.QDialog.DialogCode.Rejected)
 
 
+class BooksLoader(QtCore.QThread):
+    def __init__(self, db, master):
+        super().__init__()
+        self._database = db
+        self._master = master
+
+    def get_books(self) -> List[bookman.Book]:
+        result, success = bookman.get_all_books(self._database)
+        if not success:
+            return []
+        return result
+
+    def run(self) -> None:
+        books = self.get_books()
+
+        for book in books:
+            self._master.set_book(book)
+
+
 class BooksListPage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Books Page")
@@ -63,11 +82,10 @@ class BooksListPage(Screen):
         uic.loadUi(uifile=file, baseinstance=self)
         file.close()
 
-        self.list_widget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
+        self.list_widget: QtWidgets.QTableWidget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
         self.list_widget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.list_widget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.list_widget.setColumnCount(4)
-        self.refresh_books()
 
         self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
         self.addBookButton.clicked.connect(lambda: self.create_book())
@@ -76,6 +94,14 @@ class BooksListPage(Screen):
         self.edit_button = self.findChild(QtWidgets.QPushButton, "editButton")
         self.edit_button.clicked.connect(lambda: self.edit_book())
 
+    def showEvent(self, a0):
+        self.load_books()
+
+    def load_books(self):
+        #loader = BooksLoader(database, self)
+        #loader.start()
+        self.refresh_books()
+
     def get_books(self) -> List[bookman.Book]:
         result, success = bookman.get_all_books(database)
         if not success:
@@ -83,19 +109,24 @@ class BooksListPage(Screen):
             return []
         return result
 
+    def set_book(self, item: bookman.Book):
+        count = self.list_widget.rowCount()
+        image = QtGui.QPixmap.fromImage(get_image(item.isbn))
+        image_widget = QtWidgets.QLabel("")
+        image_widget.setPixmap(image)
+        image_widget.resize(image.width(), image.height())
+        self.list_widget.insertRow(count)
+        self.list_widget.setCellWidget(count, 0, image_widget)
+        logging.warning(f"Books {count}: {str(item)}")
+        self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
+        self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
+        self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
+        self.list_widget.resizeColumnToContents(0)
+        self.list_widget.resizeRowToContents(count)
+
     def set_books_table(self):
         for count, item in enumerate(self.books):
-            image = QtGui.QPixmap.fromImage(get_image(item.isbn))
-            image_widget = QtWidgets.QLabel("")
-            image_widget.setPixmap(image)
-            image_widget.resize(image.width(), image.height())
-            self.list_widget.setCellWidget(count, 0, image_widget)
-            logging.warning(f"Books {count}: {str(item)}")
-            self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
-            self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
-            self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
-            self.list_widget.resizeColumnToContents(0)
-            self.list_widget.resizeRowToContents(count)
+            self.set_book(item)
 
     def create_book(self):
         diag = CreateBookDiag(self.master)
@@ -131,5 +162,4 @@ class BooksListPage(Screen):
 
     def refresh_books(self):
         self.books = self.get_books()
-        self.list_widget.setRowCount(len(self.books))
         self.set_books_table()

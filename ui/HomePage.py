@@ -4,13 +4,29 @@ from pathlib import Path
 from PyQt6 import QtWidgets
 from recommendations import get_suggested_books
 from database import database
+from book_manager import Book
+from typing import List
 import asyncio
 from .CreateBookDiag import CreateBookDiag
+
+
+class RecommendationsLoader(QtCore.QThread):
+    def __init__(self, db, master):
+        super().__init__()
+        self._database = db
+        self._master = master
+
+    def run(self) -> None:
+        suggested_books = get_suggested_books(database)
+
+        for book in suggested_books:
+            self._master.add_book(book)
 
 
 class HomePage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Home Page")
+        self.suggested_books = []
         self.master = master
         path = Path(__file__).parent.resolve()
         path = path.joinpath("qt", "HomePage.ui")
@@ -23,14 +39,21 @@ class HomePage(Screen):
         self.books_list.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.books_list.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.books_list.setColumnCount(4)
-        self.suggested_books = asyncio.run(get_suggested_books(database))
 
-        #if not self.suggested_books:
-        #    self.books_list.addItem(str("No suggestions, try adding some books to your library."))
-        for book in self.suggested_books:
-            self.add_book(book)
+        self._books: List[Book] = []
 
-    def add_book(self, book):
+    def showEvent(self, event):
+        self.load_recommended_books()
+
+    def load_recommended_books(self):
+        loader = RecommendationsLoader(database, self)
+        loader.start()
+
+    def add_book(self, book: Book):
+        for b in self._books:
+            if b.title == book.title:
+                return  # Avoids adding multiple books, but does add a lot more processing time.
+        self._books.append(book)
         row_position = self.books_list.rowCount()
         self.books_list.insertRow(row_position)
         self.books_list.setItem(row_position, 0, QtWidgets.QTableWidgetItem(book.title))

@@ -106,4 +106,5 @@ class UserListPage(Screen):
         except EditUserException as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"An error occurred editing user, {str(e)}.")
             return
-        QtWidgets.QMessageBox.information(self, "Edited User", f"User {user.username} edited.")
+        QtWidgets.QMessageBox.information(self, "Updated", f"User {user.username} edited.")
+        self.refresh_users()

@@ -8,12 +8,12 @@ from book_manager import get_book_from_google_api_volume, Book
 from typing import List
 
 
-async def get_suggestions(row: pd.Series, database: db.Database) -> List[str]:
+def get_suggestions(row: pd.Series, database: db.Database) -> List[str]:
     genre_name = row['Genre']
     index = row['index']
     url = f'https://www.googleapis.com/books/v1/volumes?q=subject:"{genre_name}"'
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url)
+    with httpx.Client() as client:
+        response = client.get(url)
     if response.status_code != httpx.codes.OK:
         logging.error(f"Response {response.status_code} in {genre_name}.")
         pass
@@ -31,7 +31,7 @@ async def get_suggestions(row: pd.Series, database: db.Database) -> List[str]:
     return books
 
 
-async def get_suggested_books(database: db.Database) -> List[Book]:
+def get_suggested_books(database: db.Database) -> List[Book]:
     sql = """
     SELECT Genre, COUNT(Genre) AS totalvalue FROM Books
     GROUP BY Genre
@@ -45,11 +45,11 @@ async def get_suggested_books(database: db.Database) -> List[Book]:
     top_ten_df = df.groupby('totalvalue').head(9).reset_index()
     sample = top_ten_df.sample(n=3, replace=True)
 
-    books_list = await asyncio.gather(
+    books_list = [
         get_suggestions(sample.iloc[[0]].squeeze(), database),
         get_suggestions(sample.iloc[[1]].squeeze(), database),
         get_suggestions(sample.iloc[[2]].squeeze(), database)
-    )  # I don't think this actually works.
+    ]  # I don't think this actually works.
     books = []
     for book in books_list:
         books.extend([x for x in book])

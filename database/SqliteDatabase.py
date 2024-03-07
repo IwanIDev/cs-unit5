@@ -10,7 +10,7 @@ from pathlib import Path
 
 class Sqlite3Database(Database):
     def __init__(self, database_url, script: Path):
-        self.connection = sqlite3.connect(database_url)
+        self.connection = sqlite3.connect(database_url, check_same_thread=False)
         self.create_tables(script)
         self.tables = self.get_all_tables()
         logging.warning(f"Database created successfully, tables {self.tables}")
