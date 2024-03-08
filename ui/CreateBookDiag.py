@@ -1,7 +1,7 @@
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
 import logging
-from book_manager import get_from_isbn, add_book_to_database, IsbnInvalidException, BookDatabaseException, Book
+from book_manager import get_from_isbn, add_book_to_database, IsbnInvalidException, BookDatabaseException, Book, add_copy, get_book_id
 import asyncio
 from database import database
 
@@ -24,9 +24,12 @@ class CreateBookDiag(QtWidgets.QDialog):
 
         self.isbn = self.findChild(QtWidgets.QLineEdit, "isbnInput")
 
+        self.copies_box: QtWidgets.QSpinBox = self.findChild(QtWidgets.QSpinBox, "copiesBox")
+
     def confirm(self):
         isbn = self.isbn.text()
         isbn = ''.join(ch for ch in isbn if ch.isdigit())
+        num_copies = self.copies_box.value()
         try:
             book = get_from_isbn(str(isbn), database)
         except ValueError:
@@ -39,11 +42,15 @@ class CreateBookDiag(QtWidgets.QDialog):
             return
 
         try:
-            result = add_book_to_database(book=book, database=database)
+            result: Book = add_book_to_database(book=book, database=database)
         except BookDatabaseException as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"{e.__class__.__name__}: {e.message}")
             logging.critical(msg=f"Book couldn't be added to database: {e.__class__.__name__}: {e.message}")
             return
+
+        for n in range(num_copies):
+            logging.warning(f"Adding copy {n}")
+            add_copy(database=database, book_id=result.id, owner_id=self.master.user.user_id)
 
         message = QtWidgets.QMessageBox()
         message.setIcon(QtWidgets.QMessageBox.Icon.Information)

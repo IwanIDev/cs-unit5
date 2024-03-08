@@ -65,5 +65,5 @@ def login_user(database: db.Database, username: str, password: str) -> User:
         raise LoginUserException("Login failed, username or password incorrect.")
 
     logging.info(msg=f"Logged in successfully as user {result_cell[0]}.")
-    user = User(username=result_cell[1], password=result_cell[2], date_created=datetime.fromtimestamp(result_cell[3]), user_type=UserType(result_cell[4]))
+    user = User(user_id=result_cell[0], username=result_cell[1], password=result_cell[2], date_created=datetime.fromtimestamp(result_cell[3]), user_type=UserType(result_cell[4]))
     return user

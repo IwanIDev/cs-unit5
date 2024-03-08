@@ -44,7 +44,7 @@ class Sqlite3Database(Database):
             output.append(table[0])
         return output
 
-    def create(self, database_cell: DatabaseCell) -> bool:
+    def create(self, database_cell: DatabaseCell) -> Tuple:
         table = database_cell.table
         data = database_cell.data
 
@@ -58,19 +58,20 @@ class Sqlite3Database(Database):
             qmark += ",?"
 
         sql = f"""
-        INSERT INTO {table} ({keys}) VALUES({qmark});
+        INSERT INTO {table} ({keys}) VALUES({qmark}) RETURNING *;
         """  # Constructs the SQL query, but doesn't take the user-generated data yet, to avoid
         # possible SQL injections.
 
         with closing(self.connection.cursor()) as cursor:
             try:
-                cursor.executemany(sql, (values,))  # Even I don't understand why this works tbh.
+                res = cursor.executemany(sql, (values,))  # Even I don't understand why this works tbh.
             except sqlite3.Error as e:
                 logging.error(msg=f"Database error: {e}, message: {str(e)}")
                 raise DatabaseException(str(e))
+            output = res.fetchone()
 
         self.connection.commit()
-        return True
+        return output
 
     def update(self, database_cell: DatabaseCell, where: Tuple[str, str]) -> bool:
         table = database_cell.table

@@ -10,7 +10,7 @@ from typing import Optional
 import pandas as pd
 
 
-def add_book_to_database(book: Book, database: db.Database) -> bool:
+def add_book_to_database(book: Book, database: db.Database) -> Book:
     data = {
         'title': book.title,
         'author': book.author,
@@ -19,7 +19,8 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
         'genre': book.genre
     }
     sql = """
-    INSERT INTO books (Name, AuthorID, ISBN, DatePublished, Genre) VALUES (?, ?, ?, ?, ?);
+    INSERT INTO books (Name, AuthorID, ISBN, DatePublished, Genre) VALUES (?, ?, ?, ?, ?)
+    RETURNING BookID;
     """
     database_cell = db.DatabaseCell(table='books', data=data)
     with closing(database.connection.cursor()) as cursor:
@@ -29,8 +30,11 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
         except sqlite3.Error as e:
             logging.error(msg=f"Book {book.title} couldn't be add to database, error is {str(e)}.")
             raise BookDatabaseException(str(e))
+        output = output.fetchone()
     database.connection.commit()
-    return True
+    book = Book(bookid=output[0], title=data['title'], author=data['author'], isbn=data['isbn'],
+                date_of_publishing=book.date_published, genre=data['genre'])
+    return book
 
 
 def get_all_books(database: db.Database) -> Tuple[List[Book], bool]:
@@ -92,6 +96,18 @@ def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
     return "", True
 
 
+def get_book_id(name: str, database: db.Database) -> int:
+    sql = """
+    SELECT BookID FROM Books WHERE Name = ?;
+    """
+    with closing(database.connection.cursor()) as cursor:
+        res = cursor.execute(sql, (name,))
+        books = res.fetchall()
+        if len(books) <= 0:
+            return 0
+    return int(books[0][0])
+
+
 def get_author_id(name: str, database: db.Database) -> int:
     sql = """
     SELECT AuthorID FROM Authors WHERE Name = ?;
@@ -148,3 +164,19 @@ def get_all_authors(database: db.Database) -> pd.DataFrame:
     res = pd.read_sql_query(sql, database.connection)
     df = pd.DataFrame(data=res, columns=['AuthorID', 'Name'])
     return df
+
+
+def add_copy(database: db.Database, book_id: int, owner_id: int):
+    sql = """
+    INSERT INTO CopyOfBook (BookID, OwnerID) VALUES (?, ?) RETURNING CopyID;
+    """
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql, (book_id, owner_id))
+        except sqlite3.Error as e:
+            logging.error(f"Error adding copy of book {book_id}, error {str(e)}.")
+            return False
+        copyid = res.fetchone()[0]
+        logging.warning(f"Copy of book {book_id} made, {copyid}")
+    database.connection.commit()
+    return True
