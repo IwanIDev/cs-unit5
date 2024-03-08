@@ -1,5 +1,6 @@
 import logging
 from typing import List
+from user_manager import User
 from .screen import Screen
 from PyQt6 import QtCore, uic, QtWidgets
 from pathlib import Path
@@ -38,7 +39,7 @@ class ConfirmDeleteDialog(QtWidgets.QDialog):
 class UserListPage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Users Page")
-        self.users = []
+        self.users: List[User] = []
         self.master = master
         path = Path(__file__).parent.resolve()
         path = path.joinpath("qt", "UserListPage.ui")
@@ -74,6 +75,10 @@ class UserListPage(Screen):
     def set_users_table(self):
         for count, item in enumerate(self.users):
             self.listWidget.setItem(count, 0, QtWidgets.QTableWidgetItem(item.username))
+            if item.user_type == userman.UserType.ADMIN:
+                self.listWidget.setItem(count, 1, QtWidgets.QTableWidgetItem("Admin"))
+            else:
+                self.listWidget.setItem(count, 1, QtWidgets.QTableWidgetItem("User"))
             self.listWidget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.date_created.strftime("%A %d %B %Y")))
 
     def create_user(self):

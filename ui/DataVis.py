@@ -31,6 +31,8 @@ class DataVis(Screen):
     def export(self):
         default_dir = Path.home().resolve()
         file_str, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save PDF File", str(default_dir), "PDF Files (*.pdf)")
+        if file_str == "":
+            return
         if not file_str.endswith('.pdf'):
             file_str += '.pdf'
         file = Path(file_str).resolve()

@@ -1,6 +1,5 @@
 from datetime import datetime
-
-from .user import User
+from .user import User, UserType
 import database as db
 import logging
 from typing import Tuple, List
@@ -15,7 +14,7 @@ def get_all_users(database: db.Database) -> Tuple[List[User], bool]:
     logging.info(msg=f"Successfully read books from database.")
     users = []
     for user in result:
-        users.append(User(username=user[1], password=user[2], date_created=datetime.fromtimestamp(user[3])))
+        users.append(User(username=user[1], password=user[2], date_created=datetime.fromtimestamp(user[3]), user_type=UserType(user[4])))
     return users, True
 
 

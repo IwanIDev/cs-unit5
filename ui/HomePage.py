@@ -46,8 +46,8 @@ class HomePage(Screen):
         self.load_recommended_books()
 
     def load_recommended_books(self):
-        loader = RecommendationsLoader(database, self)
-        loader.start()
+        self.loader = RecommendationsLoader(database, self)
+        self.loader.start()
 
     def add_book(self, book: Book):
         for b in self._books:
