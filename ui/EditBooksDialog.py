@@ -2,14 +2,14 @@ import logging
 from typing import List, Tuple
 from PyQt6 import QtWidgets, uic, QtCore
 from pathlib import Path
-from book_manager import edit_book, Book, get_author_from_id, get_all_authors
+from book_manager import edit_book, Book, get_author_from_id, get_all_authors, get_author_id
 import database as db
 import pandas as pd
 
 
 class EditBooksDialog(QtWidgets.QDialog):
     def __init__(self, master, book: Book, database: db.Database):
-        super().__init__()
+        super().__init__(master)
         self.master = master
         self.database = database
         path = Path(__file__).parent.resolve()
@@ -36,9 +36,10 @@ class EditBooksDialog(QtWidgets.QDialog):
 
     def confirm(self):
         name = self.name.text()
-        author = self.author.currentText()
+        author = self.author_box.currentText()
+        author_id = get_author_id(author, self.database)
         book = Book(title=name,
-                    author=author,
+                    author=author_id,
                     date_of_publishing=self.book.date_published,
                     isbn=self.book.isbn,
                     genre=self.book.genre

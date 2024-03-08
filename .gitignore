@@ -6,3 +6,4 @@ build/
 dist/
 exports/
 database.db
+**/__pycache__

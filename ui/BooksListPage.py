@@ -66,7 +66,12 @@ class BooksLoader(QtCore.QThread):
     def run(self) -> None:
         books = self.get_books()
         for book in books:
-            logging.warning(f"Book async {book.title}.")
+            book_already_exists = False
+            for b in self._master.books:
+                if b.title == book.title:
+                    book_already_exists = True  # This is quite slow, O(n^2).
+            if book_already_exists:
+                continue
             self._master.books.append(book)
 
 
@@ -164,5 +169,4 @@ class BooksListPage(Screen):
         self.refresh_books()
 
     def refresh_books(self):
-        self.books = self.get_books()
-        self.set_books_table()
+        self.load_books()
