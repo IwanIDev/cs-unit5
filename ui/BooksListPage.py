@@ -65,9 +65,9 @@ class BooksLoader(QtCore.QThread):
 
     def run(self) -> None:
         books = self.get_books()
-
         for book in books:
-            self._master.set_book(book)
+            logging.warning(f"Book async {book.title}.")
+            self._master.books.append(book)
 
 
 class BooksListPage(Screen):
@@ -75,6 +75,7 @@ class BooksListPage(Screen):
         super().__init__(master=master, title="Books Page")
         self.books = []
         self.master = master
+        self._first_time_viewing = True
         path = Path(__file__).parent.resolve()
         path = path.joinpath("qt", "BooksListPage.ui")
         file = QtCore.QFile(str(path))
@@ -95,12 +96,15 @@ class BooksListPage(Screen):
         self.edit_button.clicked.connect(lambda: self.edit_book())
 
     def showEvent(self, a0):
+        if not self._first_time_viewing:
+            return
+        self._first_time_viewing = False
         self.load_books()
 
     def load_books(self):
-        #loader = BooksLoader(database, self)
-        #loader.start()
-        self.refresh_books()
+        loader = BooksLoader(database, self)
+        loader.finished.connect(lambda: self.set_books_table())
+        loader.start()
 
     def get_books(self) -> List[bookman.Book]:
         result, success = bookman.get_all_books(database)
@@ -117,7 +121,6 @@ class BooksListPage(Screen):
         image_widget.resize(image.width(), image.height())
         self.list_widget.insertRow(count)
         self.list_widget.setCellWidget(count, 0, image_widget)
-        logging.warning(f"Books {count}: {str(item)}")
         self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
         self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
         self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))

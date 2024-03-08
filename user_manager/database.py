@@ -11,7 +11,8 @@ def add_user_to_database(database: db.Database, user: User) -> bool:
     data = {
         "username": user.username,
         "password": user.password,
-        "dateCreated": str(user.date_created.timestamp())
+        "dateCreated": str(user.date_created.timestamp()),
+        "UserType": int(user.user_type)
     }
     database_cell = db.DatabaseCell(table="users", data=data)
     try:

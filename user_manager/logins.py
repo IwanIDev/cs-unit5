@@ -1,7 +1,9 @@
+import sqlite3
+from contextlib import closing
 import werkzeug.security as ws
 import database as db
 import logging
-from .user import User
+from .user import User, UserType
 from .database import add_user_to_database
 from .exceptions import RegisterUserException, LoginUserException, UserDatabaseErrorException
 from datetime import datetime
@@ -10,7 +12,25 @@ from datetime import datetime
 def register_user(database: db.Database, username, password) -> bool:
     if not username or not password:
         raise RegisterUserException("Both fields must be filled.")
-    user_to_register = User(username=username, password=ws.generate_password_hash(password), date_created=datetime.now())
+    num_of_users_sql = """
+    SELECT COUNT(UserID) FROM Users;
+    """
+    count = 0
+    try:
+        with closing(database.connection.cursor()) as cursor:
+            res = cursor.execute(num_of_users_sql)
+            count = res.fetchall()[0][0]
+    except sqlite3.Error as e:
+        logging.error(f"Error getting count of users, {str(e)}")
+        count = 1
+    if count <= 0:
+        logging.info("First user registered, making type admin.")
+        user_type = UserType.ADMIN
+    else:
+        user_type = UserType.USER
+
+    user_to_register = User(username=username, password=ws.generate_password_hash(password), date_created=datetime.now(), user_type=user_type)
+
     try:
         result = add_user_to_database(database, user_to_register)
     except UserDatabaseErrorException as e:
@@ -45,5 +65,5 @@ def login_user(database: db.Database, username: str, password: str) -> User:
         raise LoginUserException("Login failed, username or password incorrect.")
 
     logging.info(msg=f"Logged in successfully as user {result_cell[0]}.")
-    user = User(username=result_cell[1], password=result_cell[2], date_created=datetime.fromtimestamp(result_cell[3]))
+    user = User(username=result_cell[1], password=result_cell[2], date_created=datetime.fromtimestamp(result_cell[3]), user_type=UserType(result_cell[4]))
     return user

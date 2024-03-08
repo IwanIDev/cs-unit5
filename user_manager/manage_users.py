@@ -32,7 +32,7 @@ def delete_user(database: db.Database, user: User) -> bool:
     return True
 
 
-def edit_book(database: db.Database, user: User) -> Tuple[str, bool]:
+def edit_user(database: db.Database, user: User) -> Tuple[str, bool]:
     data = {
         "username": user.username,
         "password": user.password,
