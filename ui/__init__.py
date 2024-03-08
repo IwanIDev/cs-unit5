@@ -12,7 +12,9 @@ from user_manager import User
 class App(QtWidgets.QMainWindow):
     def __init__(self, master):
         super().__init__()
-        self.setWindowTitle("Unit 5")
+        self.window_title = ""
+        self.window_subtitle = ""
+        self.change_title("Unit 5")
         self.setFixedSize(800, 600)
         self.user = None
 
@@ -40,3 +42,14 @@ class App(QtWidgets.QMainWindow):
     def change_screen(self, new_screen: int):
         logging.log(level=logging.INFO, msg=f"Change to screen {new_screen}")
         self.stacked_widget.setCurrentIndex(new_screen)
+
+    def change_title(self, title: str):
+        self.window_title = title
+        self.reset_title()
+
+    def reset_title(self):
+        self.setWindowTitle(f"{self.window_title} - {self.window_subtitle}")
+
+    def change_subtitle(self, subtitle: str):
+        self.window_subtitle = subtitle
+        self.reset_title()

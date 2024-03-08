@@ -75,6 +75,7 @@ def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
         "datePublished": str(book.date_published.timestamp()),
         "genre": book.genre
     }
+    logging.warning(str(book.author))
     sql = """
     UPDATE Books SET Name=?, ISBN=?, AuthorID=?, DatePublished=?, Genre=?
     WHERE ISBN=?;
@@ -82,7 +83,7 @@ def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
     with closing(database.connection.cursor()) as cursor:
         try:
             res = cursor.execute(sql,
-                                 (data['title'], data['isbn'], data['author'], data['datePublished'], data['genre']))
+                                 (data['title'], data['isbn'], data['author'], data['datePublished'], data['genre'], data['isbn']))
         except sqlite3.Error as e:
             logging.error(msg=f"Error editing book {book.title} in database, {e}.")
             return str(e), False
