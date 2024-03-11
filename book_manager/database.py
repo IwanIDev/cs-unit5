@@ -22,18 +22,18 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
     return True
 
 
-def get_all_books(database: db.Database) -> Tuple[List[Book], bool]:
+def get_all_books(database: db.Database) -> List[Book]:
     database_cell = db.DatabaseCell(table='books', data={})
     try:
         result = database.read(database_cell=database_cell)
     except db.DatabaseException as e:
         logging.error(msg=f"Error reading books from database, {e}.")
-        return [], False
+        raise BookDatabaseException(str(e))
     logging.info(msg=f"Successfully read books from database.")
     books = []
     for book in result:
         books.append(Book(title=book[1], author=book[2], isbn=book[3], date_of_publishing=datetime.fromtimestamp(book[4])))
-    return books, True
+    return books
 
 
 def delete_book(database: db.Database, book: Book) -> bool:

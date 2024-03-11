@@ -77,19 +77,20 @@ class BooksListPage(Screen):
         self.edit_button.clicked.connect(lambda: self.edit_book())
 
     def get_books(self) -> List[bookman.Book]:
-        result, success = bookman.get_all_books(database)
-        if not success:
-            QtWidgets.QMessageBox.critical(self, "Error", f"Couldn't retrieve books, read logs for error.")
+        try:
+            result = bookman.get_all_books(database)
+        except bookman.BookDatabaseException as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Couldn't retrieve books, {e.__class__.__name__}: {e.message}.")
             return []
         return result
 
     def set_books_table(self):
         for count, item in enumerate(self.books):
-            image = QtGui.QPixmap.fromImage(get_image(item.isbn))
-            image_widget = QtWidgets.QLabel("")
-            image_widget.setPixmap(image)
-            image_widget.resize(image.width(), image.height())
-            self.list_widget.setCellWidget(count, 0, image_widget)
+            #image = QtGui.QPixmap.fromImage(get_image(item.isbn))
+            #image_widget = QtWidgets.QLabel("")
+            #image_widget.setPixmap(image)
+            #image_widget.resize(image.width(), image.height())
+            #self.list_widget.setCellWidget(count, 0, image_widget)
             self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
             self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
             self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
