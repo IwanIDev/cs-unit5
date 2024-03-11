@@ -9,11 +9,11 @@ import shutil
 
 
 async def get_from_isbn(isbn: str) -> Book:
-    if not isbn_checksum(isbn):
+    if not length_check(isbn, 10, 10):
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
 
-    if not length_check(isbn, 0, 10):
+    if not isbn_checksum(isbn):
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
 
