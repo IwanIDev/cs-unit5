@@ -91,11 +91,12 @@ class BooksListPage(Screen):
             #image_widget.setPixmap(image)
             #image_widget.resize(image.width(), image.height())
             #self.list_widget.setCellWidget(count, 0, image_widget)
-            self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
-            self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
-            self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
+            self.list_widget.setItem(count, 0, QtWidgets.QTableWidgetItem(item.title))
+            self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.author))
+            self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
             self.list_widget.resizeColumnToContents(0)
             self.list_widget.resizeRowToContents(count)
+        return
 
     def create_book(self):
         diag = CreateBookDiag(self.master)

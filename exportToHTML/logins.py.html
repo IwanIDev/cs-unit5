@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>logins.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #6897bb;}
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+logins.py</font>
+</center></td></tr></table>
+<pre><span class="s0">def </span><span class="s1">login_user(database: db.Database</span><span class="s0">, </span><span class="s1">username: str</span><span class="s0">, </span><span class="s1">password: str) -&gt; bool:</span>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s0">if not </span><span class="s1">username </span><span class="s0">or not </span><span class="s1">password:</span>
+<a name="l25"><span class="ln">25   </span></a>        <span class="s0">raise </span><span class="s1">LoginUserException(</span><span class="s2">&quot;Both fields must be filled.&quot;</span><span class="s1">)</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s1">data = {</span>
+<a name="l27"><span class="ln">27   </span></a>        <span class="s2">&quot;username&quot;</span><span class="s1">: username</span>
+<a name="l28"><span class="ln">28   </span></a>    <span class="s1">}</span>
+<a name="l29"><span class="ln">29   </span></a>    <span class="s1">database_cell = db.DatabaseCell(table=</span><span class="s2">&quot;users&quot;</span><span class="s0">, </span><span class="s1">data=data)</span>
+<a name="l30"><span class="ln">30   </span></a>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s0">try</span><span class="s1">:</span>
+<a name="l32"><span class="ln">32   </span></a>        <span class="s1">result = database.read(database_cell)</span>
+<a name="l33"><span class="ln">33   </span></a>    <span class="s0">except </span><span class="s1">db.DatabaseException </span><span class="s0">as </span><span class="s1">e:</span>
+<a name="l34"><span class="ln">34   </span></a>        <span class="s1">logging.error(msg=</span><span class="s2">f&quot;Failed to login user </span><span class="s0">{</span><span class="s1">username</span><span class="s0">}</span><span class="s2">, database error: </span><span class="s0">{</span><span class="s1">str(e)</span><span class="s0">}</span><span class="s2">.&quot;</span><span class="s1">)</span>
+<a name="l35"><span class="ln">35   </span></a>        <span class="s0">raise </span><span class="s1">LoginUserException(str(e))</span>
+<a name="l36"><span class="ln">36   </span></a>
+<a name="l37"><span class="ln">37   </span></a>    <span class="s0">if not </span><span class="s1">result:</span>
+<a name="l38"><span class="ln">38   </span></a>        <span class="s1">logging.error(msg=</span><span class="s2">f&quot;Failed to login user </span><span class="s0">{</span><span class="s1">username</span><span class="s0">}</span><span class="s2">, no user found.&quot;</span><span class="s1">)</span>
+<a name="l39"><span class="ln">39   </span></a>        <span class="s0">raise </span><span class="s1">LoginUserException(</span><span class="s2">&quot;Login failed, username or password incorrect.&quot;</span><span class="s1">)</span>
+<a name="l40"><span class="ln">40   </span></a>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">result_cell: tuple = result[</span><span class="s3">0</span><span class="s1">]</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s0">if not </span><span class="s1">ws.check_password_hash(result_cell[</span><span class="s3">2</span><span class="s1">]</span><span class="s0">, </span><span class="s1">password):</span>
+<a name="l43"><span class="ln">43   </span></a>        <span class="s1">logging.error(msg=</span><span class="s2">f&quot;Failed to login user </span><span class="s0">{</span><span class="s1">username</span><span class="s0">}</span><span class="s2">, password incorrect.&quot;</span><span class="s1">)</span>
+<a name="l44"><span class="ln">44   </span></a>        <span class="s0">raise </span><span class="s1">LoginUserException(</span><span class="s2">&quot;Login failed, username or password incorrect.&quot;</span><span class="s1">)</span>
+<a name="l45"><span class="ln">45   </span></a>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s1">logging.info(msg=</span><span class="s2">f&quot;Logged in successfully as user </span><span class="s0">{</span><span class="s1">result_cell[</span><span class="s3">0</span><span class="s1">]</span><span class="s0">}</span><span class="s2">.&quot;</span><span class="s1">)</span>
+<a name="l47"><span class="ln">47   </span></a>    <span class="s0">return True</span></pre>
+</body>
+</html>

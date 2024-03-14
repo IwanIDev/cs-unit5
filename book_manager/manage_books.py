@@ -1,14 +1,16 @@
 import httpx
 from book_manager import Book
+from .database import get_author_id
 import json
 import logging
 from datetime import datetime
 from utils import get_platform_dir, isbn_checksum, length_check
 from .exceptions import IsbnInvalidException
+import database as db
 import shutil
 
 
-async def get_from_isbn(isbn: str) -> Book:
+async def get_from_isbn(isbn: str, database: db.Database) -> Book:
     if not length_check(isbn, 10, 10):
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
@@ -55,5 +57,9 @@ async def get_from_isbn(isbn: str) -> Book:
         except ValueError as e:
             logging.warning(f"Couldn't save book date {date_of_publishing_string}, so just using now.")
             publishing_date = datetime.now()
+
+    author_name = item['volumeInfo']['authors'][0]
+    author = get_author_id(author_name, database)
+
     return Book(title=item['volumeInfo']['title'], author=item['volumeInfo']['authors'][0], isbn=isbn,
                 date_of_publishing=publishing_date)

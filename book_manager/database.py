@@ -1,17 +1,21 @@
 import logging
+import sqlite3
+from contextlib import closing
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from .book import Book
 from .exceptions import BookDatabaseException
 import database as db
 
 
 def add_book_to_database(book: Book, database: db.Database) -> bool:
+    author_id = get_author_id(book.author, database)
     data = {
-        'title': book.title,
-        'author': book.author,
+        'name': book.title,
+        'authorid': author_id,
         'isbn': book.isbn,
-        'datePublished': str(book.date_published.timestamp())
+        'datePublished': str(book.date_published.timestamp()),
+        'genre': ""
     }
     database_cell = db.DatabaseCell(table='books', data=data)
     try:
@@ -23,16 +27,23 @@ def add_book_to_database(book: Book, database: db.Database) -> bool:
 
 
 def get_all_books(database: db.Database) -> List[Book]:
-    database_cell = db.DatabaseCell(table='books', data={})
-    try:
-        result = database.read(database_cell=database_cell)
-    except db.DatabaseException as e:
-        logging.error(msg=f"Error reading books from database, {e}.")
-        raise BookDatabaseException(str(e))
+    sql = """
+    SELECT Books.Name, Books.ISBN, Books.DatePublished, Books.Genre, Books.AuthorID, Authors.Name
+    FROM Books
+    INNER JOIN Authors ON (Books.AuthorID = Authors.AuthorID)
+    """
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            result = cursor.execute(sql)
+        except sqlite3.Error as e:
+            logging.error(msg=f"Error reading books from database, {e}.")
+            raise BookDatabaseException(str(e))
+        data = result.fetchall()
     logging.info(msg=f"Successfully read books from database.")
     books = []
-    for book in result:
-        books.append(Book(title=book[1], author=book[2], isbn=book[3], date_of_publishing=datetime.fromtimestamp(book[4])))
+    for book in data:
+        books.append(Book(title=book[0], isbn=book[1], date_of_publishing=datetime.fromtimestamp(book[2]),
+                          author=book[5]))
     return books
 
 
@@ -69,3 +80,35 @@ def edit_book(database: db.Database, book: Book) -> Tuple[str, bool]:
         return str(e), False
     logging.info(msg=f"Successfully updated book {book.title}.")
     return "", True
+
+
+def get_author_id(name: str, database: db.Database) -> int:
+    sql = """
+    SELECT AuthorID FROM Authors WHERE Name = ?;
+    """
+    with closing(database.connection.cursor()) as cursor:
+        res = cursor.execute(sql, (name,))
+        authors = res.fetchall()
+        if len(authors) <= 0:
+            new_author = add_author(name, database)
+            if new_author is None:
+                return 0
+            return new_author
+        return int(authors[0][0])
+
+
+def add_author(name: str, database: db.Database) -> Optional[int]:
+    sql = """
+    INSERT INTO Authors (Name) VALUES (?)
+    RETURNING AuthorID;
+    """
+    output = 0
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql, (name,))
+        except sqlite3.Error as e:
+            logging.error(f"Error adding author {name}, error {e}.")
+            return None
+        output = res.fetchone()[0]
+    database.connection.commit()
+    return output
