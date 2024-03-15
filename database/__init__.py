@@ -7,6 +7,7 @@ from .exceptions import *
 from pathlib import Path
 import logging
 
-path = Path(__file__).parent.resolve() / "init.sql"
-logging.warning(f"Loading {get_platform_dir() / 'database.sqlite'}")
-database = Sqlite3Database(database_url=str(get_platform_dir() / "database.sqlite"), script=path)
+script_path = Path(__file__).parent.resolve() / "init.sql"
+database_path = Path(__file__).parent.parent.resolve() / "database.sqlite"
+logging.warning(f"Loading {str(database_path)}")
+database = Sqlite3Database(database_url=str(database_path), script=script_path)

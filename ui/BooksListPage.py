@@ -107,6 +107,7 @@ class BooksListPage(Screen):
         self.load_books()
 
     def load_books(self):
+        self.books = []
         loader = BooksLoader(database, self)
         loader.finished.connect(lambda: self.set_books_table())
         loader.start()
@@ -133,6 +134,8 @@ class BooksListPage(Screen):
         self.list_widget.resizeRowToContents(count)
 
     def set_books_table(self):
+        self.list_widget.clear()
+        self.list_widget.setRowCount(0)
         for count, item in enumerate(self.books):
             self.set_book(item)
 
