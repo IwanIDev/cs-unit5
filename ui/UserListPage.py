@@ -103,6 +103,12 @@ class UserListPage(Screen):
         self.refresh_users()
 
     def edit_user(self):
+        logged_in_user: userman.User = self.master.user
+        user_type: userman.UserType = logged_in_user.user_type
+        if user_type != userman.UserType.ADMIN:
+            QtWidgets.QMessageBox.warning(self, "Error", "Only administrators can edit users.")
+            return
+
         user_id = self.listWidget.currentRow()
         user: userman.User = self.users[user_id]
         dialog: QtWidgets.QDialog = EditUserDialog(self, user, database)

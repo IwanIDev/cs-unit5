@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from utils import get_platform_dir
+from utils import get_platform_dir, length_check
 from .screen import Screen
 from PyQt6 import QtCore, uic, QtWidgets, QtGui
 from pathlib import Path
@@ -58,8 +58,9 @@ class BooksLoader(QtCore.QThread):
         self._master = master
 
     def get_books(self) -> List[bookman.Book]:
-        result, success = bookman.get_all_books(self._database)
-        if not success:
+        try:
+            result = bookman.get_all_books(self._database)
+        except bookman.BookDatabaseException as e:
             return []
         return result
 

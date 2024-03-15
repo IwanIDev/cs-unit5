@@ -28,16 +28,22 @@ class EditBooksDialog(QtWidgets.QDialog):
 
         self.name = self.findChild(QtWidgets.QLineEdit, "nameInput")
         self.name.setText(self.book.title)
-        self.author_box = self.findChild(QtWidgets.QComboBox, "authorInput")
-        author_name = self.get_author()
-        self.author_box.addItem(str(author_name))
+        self.author_box: QtWidgets.QComboBox = self.findChild(QtWidgets.QComboBox, "authorInput")
+        author_name = self.book.author
 
-        self.all_authors = get_all_authors(self.database)
+        self.all_authors = self.get_list_of_authors()
+        logging.warning(f"All authors: {self.all_authors}")
+        idx = 0
+        for count, author in enumerate(self.all_authors):
+            if author[1] == author_name:
+                idx = count
+            self.author_box.addItem(f"{author[0]}: {author[1]}")
+        self.author_box.setCurrentIndex(idx)
 
     def confirm(self):
         name = self.name.text()
         author = self.author_box.currentText()
-        author_id = get_author_id(author, self.database)
+        author_id = self.all_authors[self.author_box.currentIndex()][0]
         book = Book(title=name,
                     author=author_id,
                     date_of_publishing=self.book.date_published,
@@ -56,7 +62,7 @@ class EditBooksDialog(QtWidgets.QDialog):
         self.accept()
 
     def get_author(self) -> str:
-        author = get_author_from_id(self.book.author, self.database)
+        author = get_author_id(self.book.author, self.database)
         if author is None:
             return "Couldn't get author."
         return str(author)
@@ -65,5 +71,5 @@ class EditBooksDialog(QtWidgets.QDialog):
         authors: pd.DataFrame = get_all_authors(self.database)
         list_authors: List = []
         for index, row in authors.iterrows():
-            list_authors.append((str(row[0]), str(row[1])))
+            list_authors.append((str(row[0]), str(row[1]),))
         return list_authors

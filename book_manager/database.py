@@ -37,24 +37,25 @@ def add_book_to_database(book: Book, database: db.Database) -> Book:
     return book
 
 
-def get_all_books(database: db.Database) -> Tuple[List[Book], bool]:
+def get_all_books(database: db.Database) -> List[Book]:
+    sql = """
+        SELECT Books.Name, Books.ISBN, Books.DatePublished, Books.Genre, Books.AuthorID, Authors.Name
+        FROM Books
+        INNER JOIN Authors ON (Books.AuthorID = Authors.AuthorID)
+        """
     with closing(database.connection.cursor()) as cursor:
         try:
-            output = cursor.execute("""
-            SELECT Name, AuthorID, ISBN, DatePublished, Genre FROM Books;
-            """)
-            result = output.fetchall()
+            result = cursor.execute(sql)
         except sqlite3.Error as e:
             logging.error(msg=f"Error reading books from database, {e}.")
-            return [], False
+            raise BookDatabaseException(str(e))
+        data = result.fetchall()
     logging.info(msg=f"Successfully read books from database.")
     books = []
-    for book in result:
-        logging.warning(f"Book {book[0]}: {book}")
-        books.append(
-            Book(title=book[0], author=book[1], isbn=book[2], date_of_publishing=datetime.fromtimestamp(book[3]),
-                 genre=book[4]))
-    return books, True
+    for book in data:
+        books.append(Book(title=book[0], isbn=book[1], date_of_publishing=datetime.fromtimestamp(book[2]),
+                          genre=book[3], author=book[5]))
+    return books
 
 
 def delete_book(database: db.Database, book: Book) -> bool:
