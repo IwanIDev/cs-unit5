@@ -59,16 +59,37 @@ def get_all_books(database: db.Database) -> List[Book]:
 
 
 def delete_book(database: db.Database, book: Book) -> bool:
-    data = {
-        "isbn": book.isbn
-    }
-    database_cell = db.DatabaseCell(table="books", data=data)
-    try:
-        result = database.delete(database_cell=database_cell)
-    except db.DatabaseException as e:
-        logging.error(msg=f"Couldn't delete from database, {result}")
-        return False
-    logging.info(msg=f"Successfully deleted {book.title} from database.")
+    isbn = str(book.isbn)
+    sql = """
+    SELECT BookID FROM Books WHERE ISBN = ?;
+    """  # This query gets the book's ID.
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql, (isbn,))
+        except sqlite3.Error as e:
+            logging.error(msg=f"Couldn't delete book, {str(e)}!")
+            return False
+        book_id = res.fetchone()[0]  # Gets the ID itself from the result.
+
+    sql = """
+    DELETE FROM CopyOfBook WHERE BookID = ?;
+    """  # This query deletes every copy of that book.
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql, (book_id,))
+        except sqlite3.Error as e:
+            logging.error(msg=f"Couldn't delete book, {str(e)}")
+            return False
+
+    sql = """
+    DELETE FROM Books WHERE BookID = ?;
+    """  # The book can now finally be deleted.
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql, (book_id,))
+        except sqlite3.Error as e:
+            logging.error(msg=f"Couldn't delete book, {str(e)}.")
+            return False
     return True
 
 

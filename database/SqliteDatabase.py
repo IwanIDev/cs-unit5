@@ -114,6 +114,7 @@ class Sqlite3Database(Database):
                            DELETE FROM {table} WHERE {keys} LIKE ?;
                            """
             value = str(list(data.values())[0])
+        logging.warning(f"Deleting {sql}")
 
         with closing(self.connection.cursor()) as cursor:
             try:
