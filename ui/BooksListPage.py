@@ -19,9 +19,16 @@ def get_image(isbn) -> QtGui.QImage:
         image = QtGui.QImage()
         image.loadFromData(content)
     except FileNotFoundError as e:
-        logging.warning(msg=f"Could not load image {image_path} as it doesn't exist.")
-        image = QtGui.QImage(QtCore.QSize(175, 175), QtGui.QImage.Format.Format_Indexed8)
-        image.fill(QtGui.qRgb(255, 255, 255))  # Creates a white image instead.
+        bookman.create_thumbnail_from_book(str(isbn), database)
+        try:
+            with open(image_path, 'rb') as image_file:
+                content = image_file.read()
+            image = QtGui.QImage()
+            image.loadFromData(content)
+        except FileNotFoundError as e:
+            logging.warning(msg=f"Could not load image {image_path} as it doesn't exist.")
+            image = QtGui.QImage(QtCore.QSize(175, 175), QtGui.QImage.Format.Format_Indexed8)
+            image.fill(QtGui.qRgb(255, 255, 255))  # Creates a white image instead.
     return image
 
 

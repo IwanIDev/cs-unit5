@@ -46,6 +46,11 @@ def get_thumbnail(book: Dict, isbn: str) -> str:
     return image_response
 
 
+def create_thumbnail_from_book(isbn: str, database: db.Database) -> None:
+    get_from_isbn(isbn, database)
+    return
+
+
 def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
     # TODO JSON Validation
     logging.info(msg=f"Book name {item['volumeInfo']['title']} found.")

@@ -23,11 +23,13 @@ def get_operating_system() -> OperatingSystems:
 def get_platform_dir() -> Path:
     operating_system = get_operating_system()
     if operating_system == OperatingSystems.WINDOWS:
-        os_path = getenv("LOCALAPPDATA")
+        os_path = Path(getenv("LOCALAPPDATA")).expanduser()
     elif operating_system == OperatingSystems.MACOS:
-        os_path = "~/Library/Application Support"
+        os_path = Path("~/Library/Application Support").expanduser()
+    elif operating_system == OperatingSystems.LINUX:
+        os_path = Path(getenv("XDG_DATA_HOME", "~/.local/share")).expanduser()
     else:
-        os_path = getenv("XDG_DATA_HOME", "~/.local/share")
+        os_path = Path(__file__).parent.expanduser()
 
     # join with LibraryApp dir
     path = Path(os_path).expanduser()
