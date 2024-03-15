@@ -80,7 +80,7 @@ def delete_book(database: db.Database, book: Book) -> bool:
         except sqlite3.Error as e:
             logging.error(msg=f"Couldn't delete book, {str(e)}")
             return False
-
+    database.connection.commit()
     sql = """
     DELETE FROM Books WHERE BookID = ?;
     """  # The book can now finally be deleted.
@@ -90,6 +90,7 @@ def delete_book(database: db.Database, book: Book) -> bool:
         except sqlite3.Error as e:
             logging.error(msg=f"Couldn't delete book, {str(e)}.")
             return False
+    database.connection.commit()
     return True
 
 
