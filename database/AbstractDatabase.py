@@ -24,5 +24,6 @@ class Database(ABC):
     def backup(self):
         pass
 
+    @abstractmethod
     def restore_from_backup(self, backup: str):
         pass

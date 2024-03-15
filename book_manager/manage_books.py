@@ -11,10 +11,6 @@ import shutil
 
 
 async def get_from_isbn(isbn: str, database: db.Database) -> Book:
-    if not length_check(isbn, 10, 10):
-        logging.warning(msg=f"Invalid ISBN: {isbn}")
-        raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
-
     if not isbn_checksum(isbn):
         logging.warning(msg=f"Invalid ISBN: {isbn}")
         raise IsbnInvalidException(f"ISBN {isbn} isn't valid.")
@@ -35,19 +31,25 @@ async def get_from_isbn(isbn: str, database: db.Database) -> Book:
     logging.info(msg=f"Book name {item['volumeInfo']['title']} found.")
     date_of_publishing_string = item['volumeInfo']['publishedDate']
 
+    image = False
+
     try:
         image_url = item['volumeInfo']['imageLinks']['thumbnail']
     except KeyError as e:
         logging.warning(f"No thumbnail found for {isbn}")
         #  Todo this still doesn't work though.
-    image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
-    async with httpx.AsyncClient() as client:
-        image_response = await client.get(url=image_url)
-    if image_response.status_code != httpx.codes.OK:
-        logging.warning(f'Status code not okay in cover image: {image_response.status_code}.')
+    else:
+        image = True
 
-    with open(image_path, 'wb') as f:  # This just saves the image to a file without asking any questions.
-        f.write(image_response.content)
+    if image:
+        image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
+        async with httpx.AsyncClient() as client:
+            image_response = await client.get(url=image_url)
+        if image_response.status_code != httpx.codes.OK:
+            logging.warning(f'Status code not okay in cover image: {image_response.status_code}.')
+
+        with open(image_path, 'wb') as f:  # This just saves the image to a file without asking any questions.
+            f.write(image_response.content)
 
     try:
         publishing_date = datetime.strptime(date_of_publishing_string, "%Y-%m-%d")
