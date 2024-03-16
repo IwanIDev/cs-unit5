@@ -6,6 +6,7 @@ from user_manager import User, edit_user, UserDatabaseErrorException
 import database as db
 import werkzeug.security as ws
 import pandas as pd
+from utils import length_check
 
 
 class EditUserException(Exception):
@@ -39,15 +40,36 @@ class EditUserDialog(QtWidgets.QDialog):
     def confirm(self):
         name = self.name.text()
         password = self.password_box.text()
+        if not length_check(password, 0, 64):
+            msg = QtWidgets.QErrorMessage(self)
+            msg.showMessage("Password must be between 2 and 64 characters long.")
+            msg.exec()
+            self.reject()
+            return
+
         if password == "":
             password = self.user.password
         else:
             password = ws.generate_password_hash(password)
+        if not length_check(name, 4, 32):
+            msg = QtWidgets.QErrorMessage(self)
+            msg.showMessage("Username must be between 4 and 32 characters long.")
+            msg.exec()
+            self.reject()
+            return
         user = User(username=name, password=password, date_created=self.user.date_created)
         try:
             result = edit_user(self.database, user, self.user.username)
         except UserDatabaseErrorException as e:
-            raise EditUserException(str(e))
+            msg = QtWidgets.QErrorMessage(self)
+            msg.showMessage(f"{e.__class__.__name__}: {str(e)}")
+            msg.exec()
+            self.reject()
+            return
         if not result:
-            raise EditUserException(str(result))
+            msg = QtWidgets.QErrorMessage(self)
+            msg.showMessage(f"{str(result)}")
+            msg.exec()
+            self.reject()
+            return
         self.accept()

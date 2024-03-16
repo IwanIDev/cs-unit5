@@ -88,6 +88,11 @@ class UserListPage(Screen):
         self.refresh_users()
 
     def delete_user(self):
+        logged_in_user: userman.User = self.master.user
+        user_type: userman.UserType = logged_in_user.user_type
+        if user_type != userman.UserType.ADMIN:
+            QtWidgets.QMessageBox.warning(self, "Error", "Only administrators can delete users.")
+            return
         user_id = self.listWidget.currentRow()
         user = self.users[user_id]
         dialog = ConfirmDeleteDialog(parent=self.master, user=user)
@@ -112,10 +117,8 @@ class UserListPage(Screen):
         user_id = self.listWidget.currentRow()
         user: userman.User = self.users[user_id]
         dialog: QtWidgets.QDialog = EditUserDialog(self, user, database)
-        try:
-            result = dialog.exec()
-        except EditUserException as e:
-            QtWidgets.QMessageBox.critical(self, "Error", f"An error occurred editing user, {str(e)}.")
+        result = dialog.exec()
+        if not result:
             return
         QtWidgets.QMessageBox.information(self, "Updated", f"User {user.username} edited.")
         self.refresh_users()

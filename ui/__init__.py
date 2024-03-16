@@ -56,6 +56,7 @@ class App(QtWidgets.QMainWindow):
         self.reset_title()
 
     def reset_title(self):
+        self.window_title = self._settings.get('title')
         self.setWindowTitle(f"{self._settings.get('title')} - {self.window_subtitle}")
 
     def change_subtitle(self, subtitle: str):
