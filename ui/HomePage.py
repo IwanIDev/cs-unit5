@@ -35,10 +35,16 @@ class HomePage(Screen):
         uic.loadUi(uifile=file, baseinstance=self)
         file.close()
 
+        self.window_layout = self.layout()
+
         self.books_list: QtWidgets.QTableWidget = self.findChild(QtWidgets.QTableWidget, "books")
         self.books_list.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.books_list.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.books_list.setColumnCount(4)
+
+        self.progress_bar: QtWidgets.QProgressBar = QtWidgets.QProgressBar()
+        self.progress_bar.setRange(0, 1)
+        self.window_layout.addWidget(self.progress_bar)
 
         self._books: List[Book] = []
 
@@ -46,8 +52,13 @@ class HomePage(Screen):
         self.load_recommended_books()
 
     def load_recommended_books(self):
-        self.loader = RecommendationsLoader(database, self)
+        self.progress_bar.setRange(0, 0)
+        self.loader: QtCore.QThread = RecommendationsLoader(database, self)
+        self.loader.finished.connect(lambda: self.finished_loading())
         self.loader.start()
+
+    def finished_loading(self):
+        self.progress_bar.setRange(0, 1)
 
     def add_book(self, book: Book):
         for b in self._books:

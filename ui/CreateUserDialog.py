@@ -29,7 +29,6 @@ class CreateUserDialog(QtWidgets.QDialog):
     def confirm(self):
         username = self.username.text()
         password = self.password.text()
-        password = ws.generate_password_hash(password)
         try:
             user = User(username=username, password=password, date_created=datetime.now())
         except ValueError:

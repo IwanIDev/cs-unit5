@@ -6,7 +6,10 @@ from .MainWindow import MainWindow
 import PyQt6.QtWidgets as QtWidgets
 from .screen import Screen
 import logging
+from pathlib import Path
+from utils import get_platform_dir
 from user_manager import User
+import json
 
 
 class App(QtWidgets.QMainWindow):
@@ -14,7 +17,6 @@ class App(QtWidgets.QMainWindow):
         super().__init__()
         self.window_title = ""
         self.window_subtitle = ""
-        self.change_title("Unit 5")
         self.setFixedSize(800, 600)
         self.user = None
 
@@ -24,6 +26,8 @@ class App(QtWidgets.QMainWindow):
         self.title.setText("")
         self._layout.addWidget(self.title)
 
+        self._settings = {}
+        self.update_settings()
         self.loading_box = QtWidgets.QDialog()
         self.loading_box.show()
 
@@ -45,11 +49,36 @@ class App(QtWidgets.QMainWindow):
 
     def change_title(self, title: str):
         self.window_title = title
+        self._settings['title'] = title
+        path = get_platform_dir() / "settings.json"
+        with open(str(path), 'w') as f:
+            json.dump(self._settings, f, indent=4)
         self.reset_title()
 
     def reset_title(self):
-        self.setWindowTitle(f"{self.window_title} - {self.window_subtitle}")
+        self.setWindowTitle(f"{self._settings.get('title')} - {self.window_subtitle}")
 
     def change_subtitle(self, subtitle: str):
         self.window_subtitle = subtitle
+        self.reset_title()
+
+    def update_settings(self):
+        path = get_platform_dir() / "settings.json"
+        loaded_settings = {}
+        try:
+            with open(str(path), 'r') as f:
+                try:
+                    loaded_settings = json.load(f)
+                except ValueError as e:
+                    logging.warning(f"No settings found, using default.")
+                    loaded_settings = {
+                        'title': "Unit 5"
+                    }
+        except FileNotFoundError as e:
+            logging.warning(f"No settings found, using default.")
+            loaded_settings = {
+                'title': "Unit 5"
+            }
+        logging.warning(f"Loaded settings: {loaded_settings}")
+        self._settings.update(loaded_settings)
         self.reset_title()

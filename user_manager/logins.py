@@ -3,6 +3,7 @@ from contextlib import closing
 import werkzeug.security as ws
 import database as db
 import logging
+from utils import length_check
 from .user import User, UserType
 from .database import add_user_to_database
 from .exceptions import RegisterUserException, LoginUserException, UserDatabaseErrorException
@@ -12,6 +13,17 @@ from datetime import datetime
 def register_user(database: db.Database, username, password) -> bool:
     if not username or not password:
         raise RegisterUserException("Both fields must be filled.")
+    username_valid = length_check(username, 4, 32)
+    password_valid = length_check(password, 2, 64)
+
+    error = ""
+    if not username_valid:
+        error += "Usernames must have at least 4 characters and at most 32."
+    if not password_valid:
+        error += "Passwords must have at least 2 and at most 64 characters."
+    if error != "":
+        raise RegisterUserException(error)
+
     num_of_users_sql = """
     SELECT COUNT(UserID) FROM Users;
     """

@@ -50,18 +50,6 @@ class LoginPage(Screen):
         username = self.username.text()
         password = self.password.text()
 
-        username_valid = length_check(username, 4, 32)
-        password_valid = length_check(password, 2, 64)
-
-        error = ""
-        if not username_valid:
-            error += "Usernames must have at least 4 characters and at most 32."
-        if not password_valid:
-            error += "Passwords must have at least 2 and at most 64 characters."
-        if error != "":
-            QtWidgets.QMessageBox.warning(self, "Error", error)
-            return
-
         try:
             user_manager.register_user(username=username,
                                        password=password,

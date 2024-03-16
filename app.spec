@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('ui/qt', 'ui/qt'), ('database/init.sql', 'database')],
+    datas=[('ui/qt', 'ui/qt'), ('database/init.sql', 'database'), ('database.sqlite', 'database.sqlite')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
