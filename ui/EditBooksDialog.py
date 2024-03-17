@@ -5,6 +5,7 @@ from pathlib import Path
 from book_manager import edit_book, Book, get_author_from_id, get_all_authors, get_author_id
 import database as db
 import pandas as pd
+from utils import length_check
 
 
 class EditBooksDialog(QtWidgets.QDialog):
@@ -42,6 +43,12 @@ class EditBooksDialog(QtWidgets.QDialog):
 
     def confirm(self):
         name = self.name.text()
+        if not length_check(name, 1, 64):
+            msg = QtWidgets.QErrorMessage(self)
+            msg.showMessage("Book title must be at least 1 and at most 64 characters.")
+            msg.exec()
+            self.reject()
+            return
         author = self.author_box.currentText()
         author_id = self.all_authors[self.author_box.currentIndex()][0]
         book = Book(title=name,
