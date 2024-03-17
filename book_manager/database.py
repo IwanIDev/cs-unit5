@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime
 from typing import List, Tuple
 from .book import Book
-from .exceptions import BookDatabaseException
+from .exceptions import BookDatabaseException, BooksSearchException
 import database as db
 from contextlib import closing
 from typing import Optional
@@ -39,7 +39,7 @@ def add_book_to_database(book: Book, database: db.Database) -> Book:
 
 def get_all_books(database: db.Database) -> List[Book]:
     sql = """
-        SELECT Books.Name, Books.ISBN, Books.DatePublished, Books.Genre, Books.AuthorID, Authors.Name
+        SELECT Books.BookID, Books.Name, Books.ISBN, Books.DatePublished, Books.Genre, Books.AuthorID, Authors.Name
         FROM Books
         INNER JOIN Authors ON (Books.AuthorID = Authors.AuthorID)
         """
@@ -53,8 +53,8 @@ def get_all_books(database: db.Database) -> List[Book]:
     logging.info(msg=f"Successfully read books from database.")
     books = []
     for book in data:
-        books.append(Book(title=book[0], isbn=book[1], date_of_publishing=datetime.fromtimestamp(book[2]),
-                          genre=book[3], author=book[5]))
+        books.append(Book(bookid=book[0], title=book[1], isbn=book[2], date_of_publishing=datetime.fromtimestamp(book[3]),
+                          genre=book[4], author=book[6]))
     return books
 
 
@@ -129,6 +129,40 @@ def get_book_id(name: str, database: db.Database) -> int:
         if len(books) <= 0:
             return 0
     return int(books[0][0])
+
+
+def search_book(name: str, authorid: str, database: db.Database) -> List[Book]:
+    sql = """
+    SELECT Books.BookID, Books.Name, Books.ISBN, Books.DatePublished, Books.Genre, Books.AuthorID, Authors.Name
+    FROM Books
+    INNER JOIN Authors ON (Books.AuthorID = Authors.AuthorID)
+    WHERE Books.Name LIKE ? AND Books.AuthorID LIKE ?;
+    """
+    values = []
+    if name != "":
+        values.append(name)
+    else:
+        values.append("%")
+    if authorid != "":
+        values.append(authorid)
+    else:
+        values.append("%")
+    values_tuple = tuple(values)
+
+    with closing(database.connection.cursor()) as cursor:
+        try:
+            res = cursor.execute(sql, values_tuple)
+        except sqlite3.Error as e:
+            logging.warning(f"Error in searching books, {e.__class__.__name__}: {str(e)}.")
+            raise BooksSearchException(str(e))
+        result = res.fetchall()
+
+    if len(result) == 0:
+        return []
+    return [
+        Book(bookid=x[0], title=x[1], isbn=x[2], author=x[6], genre=x[4], date_of_publishing=datetime.fromtimestamp(x[3]))
+        for x in result
+    ]
 
 
 def get_author_id(name: str, database: db.Database) -> int:
