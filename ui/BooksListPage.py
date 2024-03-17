@@ -119,9 +119,9 @@ class BooksListPage(Screen):
 
     def load_books(self):
         self.books = []
-        loader = BooksLoader(database, self)
-        loader.finished.connect(lambda: self.set_books_table())
-        loader.start()
+        self.loader = BooksLoader(database, self)
+        self.loader.finished.connect(lambda: self.set_books_table())
+        self.loader.start()
 
     def get_books(self) -> List[bookman.Book]:
         result, success = bookman.get_all_books(database)
