@@ -6,6 +6,7 @@ from PyQt6 import QtCore, uic, QtWidgets, QtGui
 from pathlib import Path
 from .CreateBookDiag import CreateBookDiag
 from .EditBooksDialog import EditBooksDialog
+from .SearchBooksDialog import SearchBooksDialog
 from .ImageWidget import ImageWidget
 import book_manager as bookman
 from database import database
@@ -107,6 +108,8 @@ class BooksListPage(Screen):
         self.deleteBookButton.clicked.connect(lambda: self.delete_book())
         self.edit_button = self.findChild(QtWidgets.QPushButton, "editButton")
         self.edit_button.clicked.connect(lambda: self.edit_book())
+        self.search_button: QtWidgets.QPushButton = self.findChild(QtWidgets.QPushButton, "searchButton")
+        self.search_button.clicked.connect(lambda: self.search_books())
 
     def showEvent(self, a0):
         if not self._first_time_viewing:
@@ -181,3 +184,7 @@ class BooksListPage(Screen):
 
     def refresh_books(self):
         self.load_books()
+
+    def search_books(self):
+        dialog = SearchBooksDialog(master=self.master, database=database)
+        result = dialog.exec()

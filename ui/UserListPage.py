@@ -60,6 +60,7 @@ class UserListPage(Screen):
         self.edit_user_button = self.findChild(QtWidgets.QPushButton, "editButton")
         self.edit_user_button.clicked.connect(lambda: self.edit_user())
 
+
     def refresh_users(self):
         self.users = self.get_users()
         self.listWidget.setRowCount(len(self.users))
