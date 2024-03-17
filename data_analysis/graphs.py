@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-
 import database as db
 import pandas as pd
 import matplotlib.pyplot as plt
