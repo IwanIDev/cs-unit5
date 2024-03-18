@@ -19,10 +19,12 @@ class LoginPage(Screen):
         loadUi(uifile=file, baseinstance=self)
         file.close()
 
-        self.login_button = self.findChild(QtWidgets.QPushButton, "loginButton")
+        self.login_button: QtWidgets.QPushButton = self.findChild(QtWidgets.QPushButton, "loginButton")
         self.login_button.clicked.connect(self.login_user)
         self.register_button = self.findChild(QtWidgets.QPushButton, "registerButton")
         self.register_button.clicked.connect(self.register_user)
+
+        self.login_button.setAutoDefault(True)
 
         self.username = self.findChild(QtWidgets.QLineEdit, "usernameForm")
         self.password = self.findChild(QtWidgets.QLineEdit, "passwordForm")

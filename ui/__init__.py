@@ -41,6 +41,7 @@ class App(QtWidgets.QMainWindow):
         self._layout.addWidget(self.stacked_widget)
         self.setCentralWidget(self.stacked_widget)
         self.loading_box.done(0)
+
         self.change_screen(0)
 
     def change_screen(self, new_screen: int):

@@ -13,7 +13,7 @@ from database import database
 
 
 def get_image(isbn) -> QtGui.QImage:
-    image_path = get_temp_dir() / f"{isbn}.jpg"  # Kinda hardcoded path, but whatever
+    image_path = get_platform_dir() / f"{isbn}.jpg"  # Kinda hardcoded path, but whatever
     try:
         with open(image_path, 'rb') as image_file:
             content = image_file.read()
