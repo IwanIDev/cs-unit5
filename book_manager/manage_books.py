@@ -3,7 +3,7 @@ from book_manager import Book
 import json
 import logging
 from datetime import datetime
-from utils import get_platform_dir, isbn_checksum, length_check
+from utils import get_platform_dir, isbn_checksum, length_check, get_temp_dir
 from .exceptions import IsbnInvalidException
 from .database import get_author_id
 from typing import Dict
@@ -76,7 +76,7 @@ def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
     author = get_author_id(author_name, database)
 
     image_response = get_thumbnail(item, isbn)
-    image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
+    image_path = get_temp_dir().resolve() / f"{isbn}.jpg"
 
     try:
         with open(image_path, 'wb') as f:  # This just saves the image to a file without asking any questions.

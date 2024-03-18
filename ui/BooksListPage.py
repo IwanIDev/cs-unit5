@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from utils import get_platform_dir, length_check
+from utils import get_platform_dir, length_check, get_temp_dir
 from .screen import Screen
 from PyQt6 import QtCore, uic, QtWidgets, QtGui
 from pathlib import Path
@@ -13,7 +13,7 @@ from database import database
 
 
 def get_image(isbn) -> QtGui.QImage:
-    image_path = get_platform_dir() / f"{isbn}.jpg"  # Kinda hardcoded path, but whatever
+    image_path = get_temp_dir() / f"{isbn}.jpg"  # Kinda hardcoded path, but whatever
     try:
         with open(image_path, 'rb') as image_file:
             content = image_file.read()
@@ -60,6 +60,9 @@ class ConfirmDeleteDialog(QtWidgets.QDialog):
 
 
 class BooksLoader(QtCore.QThread):
+    count_changed = QtCore.pyqtSignal(int)
+    books_created = QtCore.pyqtSignal(list, list)
+
     def __init__(self, db, master):
         super().__init__()
         self._database = db
@@ -74,20 +77,28 @@ class BooksLoader(QtCore.QThread):
 
     def run(self) -> None:
         books = self.get_books()
-        for book in books:
+        resulting_books = []
+        book_pixmaps = []
+        total = len(books)
+        for count, book in enumerate(books):
+            self.count_changed.emit(int((count/total)*100))
             book_already_exists = False
             for b in self._master.books:
                 if b.title == book.title:
                     book_already_exists = True  # This is quite slow, O(n^2).
             if book_already_exists:
                 continue
-            self._master.books.append(book)
+            resulting_books.append(book)
+            image = QtGui.QPixmap.fromImage(get_image(book.isbn))
+            book_pixmaps.append(image)
+        self.books_created.emit(resulting_books, book_pixmaps)
 
 
 class BooksListPage(Screen):
     def __init__(self, master):
         super().__init__(master=master, title="Books Page")
         self.books = []
+        self.book_pixmaps = []
         self.master = master
         self._first_time_viewing = True
         path = Path(__file__).parent.resolve()
@@ -96,6 +107,8 @@ class BooksListPage(Screen):
         file.open(QtCore.QIODevice.OpenModeFlag.ReadOnly)
         uic.loadUi(uifile=file, baseinstance=self)
         file.close()
+
+        self.window_layout: QtWidgets.QLayout = self.layout()
 
         self.list_widget: QtWidgets.QTableWidget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
         self.list_widget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
@@ -111,6 +124,10 @@ class BooksListPage(Screen):
         self.search_button: QtWidgets.QPushButton = self.findChild(QtWidgets.QPushButton, "searchButton")
         self.search_button.clicked.connect(lambda: self.search_books())
 
+        self.progress_bar: QtWidgets.QProgressBar = QtWidgets.QProgressBar(self)
+        self.progress_bar.setRange(0, 100)
+        self.window_layout.addWidget(self.progress_bar)
+
     def showEvent(self, a0):
         if not self._first_time_viewing:
             return
@@ -118,10 +135,24 @@ class BooksListPage(Screen):
         self.load_books()
 
     def load_books(self):
+        self.progress_bar.setHidden(False)  # Reveals the loading bar as it might have been hidden earlier.
         self.books = []
         self.loader = BooksLoader(database, self)
-        self.loader.finished.connect(lambda: self.set_books_table())
+        self.loader.finished.connect(lambda: self.finished_loading_books())
+        self.loader.count_changed.connect(lambda x: self.count_changed(x))
+        self.loader.books_created.connect(lambda x, y: self.books_created(x, y))
         self.loader.start()
+
+    def count_changed(self, value: int):
+        self.progress_bar.setValue(value)
+
+    def books_created(self, books: List, pixmaps: List):
+        self.books = books
+        self.book_pixmaps = pixmaps
+
+    def finished_loading_books(self):
+        self.progress_bar.setHidden(True)  # Hides the loading bar as it doesn't need to be shown anymore.
+        self.set_books_table()
 
     def get_books(self) -> List[bookman.Book]:
         result, success = bookman.get_all_books(database)
@@ -130,9 +161,8 @@ class BooksListPage(Screen):
             return []
         return result
 
-    def set_book(self, item: bookman.Book):
-        count = self.list_widget.rowCount()
-        image = QtGui.QPixmap.fromImage(get_image(item.isbn))
+    def set_book(self, item: bookman.Book, count):
+        image: QtWidgets.QLabel = self.book_pixmaps[count]
         image_widget = QtWidgets.QLabel("")
         image_widget.setPixmap(image)
         image_widget.resize(image.width(), image.height())
@@ -148,7 +178,7 @@ class BooksListPage(Screen):
         self.list_widget.clear()
         self.list_widget.setRowCount(0)
         for count, item in enumerate(self.books):
-            self.set_book(item)
+            self.set_book(item, count)
 
     def create_book(self):
         diag = CreateBookDiag(self.master)

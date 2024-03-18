@@ -42,7 +42,7 @@ def get_platform_dir() -> Path:
 def get_temp_dir() -> Path:
     operating_system = get_operating_system()
     if operating_system == OperatingSystems.WINDOWS:
-        path = Path(getenv("LOCALAPPDATA")).absolute() / "LibraryApp"
+        path = Path(getenv("TEMP")).absolute() / "LibraryApp"
     elif operating_system == OperatingSystems.MACOS:
         path = Path("/tmp").absolute() / "LibraryApp"
     else:

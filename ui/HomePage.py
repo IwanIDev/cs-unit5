@@ -49,6 +49,7 @@ class HomePage(Screen):
         self._books: List[Book] = []
 
     def showEvent(self, event):
+        self.progress_bar.setHidden(False)  # Makes sure the progress bar is shown.
         self.load_recommended_books()
 
     def load_recommended_books(self):
@@ -59,6 +60,7 @@ class HomePage(Screen):
 
     def finished_loading(self):
         self.progress_bar.setRange(0, 1)
+        self.progress_bar.setHidden(True)
 
     def add_book(self, book: Book):
         for b in self._books:
