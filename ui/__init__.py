@@ -45,7 +45,6 @@ class App(QtWidgets.QMainWindow):
         self.change_screen(0)
 
     def change_screen(self, new_screen: int):
-        logging.log(level=logging.INFO, msg=f"Change to screen {new_screen}")
         self.stacked_widget.setCurrentIndex(new_screen)
 
     def change_title(self, title: str):
@@ -81,6 +80,5 @@ class App(QtWidgets.QMainWindow):
             loaded_settings = {
                 'title': "Unit 5"
             }
-        logging.warning(f"Loaded settings: {loaded_settings}")
         self._settings.update(loaded_settings)
         self.reset_title()

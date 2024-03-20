@@ -13,10 +13,8 @@ class Sqlite3Database(Database):
         self.connection = sqlite3.connect(database_url, check_same_thread=False)
         self.create_tables(script)
         self.tables = self.get_all_tables()
-        logging.warning(f"Database created successfully, tables {self.tables}")
         result = self.connection.execute("SELECT * FROM Books;")
         names = [description[0] for description in result.description]
-        logging.warning(f"Result {names}")
 
     def create_tables(self, script):
         with closing(self.connection.cursor()) as cursor:

@@ -140,7 +140,7 @@ def search_book(name: str, authorid: str, database: db.Database) -> List[Book]:
     """
     values = []
     if name != "":
-        values.append(name)
+        values.append(f"%{name}%")
     else:
         values.append("%")
     if authorid != "":

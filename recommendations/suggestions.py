@@ -27,7 +27,6 @@ def get_suggestions(row: pd.Series, database: db.Database) -> List[str]:
     for i, item in enumerate(result['items'][:3]):  # Gets top three items
         book = get_book_from_google_api_volume(item, database)
         books.append(book)
-        logging.warning(f"{index}, {i}, {book.title}")
     return books
 
 
@@ -53,5 +52,4 @@ def get_suggested_books(database: db.Database) -> List[Book]:
     books = []
     for book in books_list:
         books.extend([x for x in book])
-    logging.warning(books)
     return books
