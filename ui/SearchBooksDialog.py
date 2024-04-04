@@ -1,15 +1,17 @@
+import logging
 from pathlib import Path
 from typing import List, Tuple
 import pandas as pd
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
-from book_manager import get_all_authors, get_all_books, search_book, Book, BooksSearchException
+from book_manager import get_all_authors, get_all_books, search_book, Book, BooksSearchException, get_locations, \
+    Location, get_copies_from_book
 from datetime import datetime
 
 
 class SearchResultsDialog(QtWidgets.QDialog):
     def __init__(self, master, table: QtWidgets.QTableWidget):
         super().__init__(master)
-        self.resize(400, 300)
+        self.setFixedSize(800, 600)
         self.layout = QtWidgets.QGridLayout()
         self.setLayout(self.layout)
 
@@ -44,6 +46,12 @@ class SearchBooksDialog(QtWidgets.QDialog):
         for authorid, name in self.authors:
             self.author_box.addItem(f"{authorid} {name}")
 
+        self.location_box: QtWidgets.QComboBox = self.findChild(QtWidgets.QComboBox, "locations")
+        self.locations = get_locations(database)
+        self.location_box.addItem("")
+        for location in self.locations:
+            self.location_box.addItem(f"{location.id} {location.name}")
+
         self.button_box: QtWidgets.QDialogButtonBox = self.findChild(QtWidgets.QDialogButtonBox, "buttonBox")
         self.save_button = self.button_box.button(QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self.save_button.clicked.connect(lambda: self.confirm())
@@ -52,6 +60,10 @@ class SearchBooksDialog(QtWidgets.QDialog):
         name = self.book_name.text()
         author = self.author_box.currentText()
         authorid = self.authors[self.author_box.currentIndex()][0]
+        if self.location_box.currentIndex() == 0:
+            location = None
+        else:
+            location = self.locations[self.location_box.currentIndex() - 1]
 
         try:
             books: List[Book] = search_book(name, authorid, self.database)
@@ -68,13 +80,35 @@ class SearchBooksDialog(QtWidgets.QDialog):
             self.reject()
             return
 
-        table = QtWidgets.QTableWidget(len(books), 3, self)
+        table = QtWidgets.QTableWidget(self)
+        table.setColumnCount(6)
+        rows = -1
         for count, book in enumerate(books):
-            table.setItem(count, 0, QtWidgets.QTableWidgetItem(book.title))
-            table.setItem(count, 1, QtWidgets.QTableWidgetItem(book.author.name))
-            table.setItem(count, 2, QtWidgets.QTableWidgetItem(book.date_published.strftime("%A %d %B %Y")))
+            copies = get_copies_from_book(self.database, book)
+            copies_to_keep = []
+            if location is not None:
+                for i, copy in enumerate(copies):
+                    if copy.location.id == location.id:
+                        copies_to_keep.append(copy)
+                if len(copies_to_keep) <= 0:
+                    continue
+            locations_list = [str(x.location.name) for x in copies]
+            locations = ', '.join(locations_list)
+            rows += 1
+
+            table.insertRow(int(rows))
+
+            table.setItem(rows, 0, QtWidgets.QTableWidgetItem(str(book.isbn)))
+            table.setItem(rows, 1, QtWidgets.QTableWidgetItem(book.title))
+            table.setItem(rows, 2, QtWidgets.QTableWidgetItem(book.author.name))
+            table.setItem(rows, 3, QtWidgets.QTableWidgetItem(book.date_published.strftime("%A %d %B %Y")))
+            table.setItem(rows, 4, QtWidgets.QTableWidgetItem(f"{str(len(copies))} copies."))
+            table.setItem(rows, 5, QtWidgets.QTableWidgetItem(locations))
+
         table.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        table.resizeColumnsToContents()
+        table.resizeRowsToContents()
         results = SearchResultsDialog(self, table)
         results.exec()
         self.accept()
