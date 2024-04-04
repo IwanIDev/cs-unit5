@@ -8,6 +8,7 @@ from .exceptions import IsbnInvalidException
 from .database import get_author_id
 from typing import Dict
 import database as db
+from .author import Author
 
 
 def get_from_isbn(isbn: str, database: db.Database) -> Book:
@@ -73,7 +74,7 @@ def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
     except KeyError:
         genre_name = ""
     author_name = item['volumeInfo']['authors'][0]
-    author = get_author_id(author_name, database)
+    author: Author = get_author_id(author_name, database)
 
     image_response = get_thumbnail(item, isbn)
     image_path = get_platform_dir().resolve() / f"{isbn}.jpg"
@@ -93,6 +94,9 @@ def get_book_from_google_api_volume(item: Dict, database: db.Database) -> Book:
         except ValueError as e:
             logging.warning(f"Couldn't save book date {date_of_publishing_string}, so just using now.")
             publishing_date = datetime.now()
+
+    info_link = item['volumeInfo'].get("infoLink", "")
+
     return Book(title=item['volumeInfo']['title'], author=author, isbn=isbn,
-                date_of_publishing=publishing_date, genre=genre_name)
+                date_of_publishing=publishing_date, genre=genre_name, info_link=info_link)
 

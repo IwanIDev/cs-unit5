@@ -69,10 +69,10 @@ class EditBooksDialog(QtWidgets.QDialog):
         self.accept()
 
     def get_author(self) -> str:
-        author = get_author_id(self.book.author, self.database)
+        author = get_author_id(self.book.author.name, self.database)
         if author is None:
             return "Couldn't get author."
-        return str(author)
+        return str(author.name)
 
     def get_list_of_authors(self) -> List[Tuple[str, str]]:
         authors: pd.DataFrame = get_all_authors(self.database)

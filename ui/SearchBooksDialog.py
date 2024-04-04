@@ -71,7 +71,7 @@ class SearchBooksDialog(QtWidgets.QDialog):
         table = QtWidgets.QTableWidget(len(books), 3, self)
         for count, book in enumerate(books):
             table.setItem(count, 0, QtWidgets.QTableWidgetItem(book.title))
-            table.setItem(count, 1, QtWidgets.QTableWidgetItem(book.author))
+            table.setItem(count, 1, QtWidgets.QTableWidgetItem(book.author.name))
             table.setItem(count, 2, QtWidgets.QTableWidgetItem(book.date_published.strftime("%A %d %B %Y")))
         table.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)

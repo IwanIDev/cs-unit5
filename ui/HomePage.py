@@ -1,7 +1,9 @@
+import logging
+
 from .screen import Screen
 from PyQt6 import QtCore, uic
 from pathlib import Path
-from PyQt6 import QtWidgets
+from PyQt6 import QtWidgets, QtGui
 from recommendations import get_suggested_books
 from database import database
 from book_manager import Book
@@ -40,7 +42,7 @@ class HomePage(Screen):
         self.books_list: QtWidgets.QTableWidget = self.findChild(QtWidgets.QTableWidget, "books")
         self.books_list.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.books_list.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.books_list.setColumnCount(4)
+        self.books_list.setColumnCount(5)
 
         self.progress_bar: QtWidgets.QProgressBar = QtWidgets.QProgressBar()
         self.progress_bar.setRange(0, 1)
@@ -69,8 +71,9 @@ class HomePage(Screen):
         self._books.append(book)
         row_position = self.books_list.rowCount()
         self.books_list.insertRow(row_position)
-        self.books_list.setItem(row_position, 0, QtWidgets.QTableWidgetItem(book.title))
-        self.books_list.setItem(row_position, 1, QtWidgets.QTableWidgetItem(book.author))
-        self.books_list.setItem(row_position, 2, QtWidgets.QTableWidgetItem(book.date_published.strftime("%A %d %B %Y")))
+        self.books_list.setItem(row_position, 0, QtWidgets.QTableWidgetItem(book.isbn))
+        self.books_list.setItem(row_position, 1, QtWidgets.QTableWidgetItem(book.title))
+        self.books_list.setItem(row_position, 2, QtWidgets.QTableWidgetItem(book.author.name))
+        self.books_list.setItem(row_position, 3, QtWidgets.QTableWidgetItem(book.date_published.strftime("%A %d %B %Y")))
         self.books_list.resizeRowToContents(row_position)
         self.books_list.resizeColumnsToContents()

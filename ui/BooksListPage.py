@@ -10,6 +10,7 @@ from .SearchBooksDialog import SearchBooksDialog
 from .ImageWidget import ImageWidget
 import book_manager as bookman
 from database import database
+import webbrowser
 
 
 def get_image(isbn) -> QtGui.QImage:
@@ -95,6 +96,8 @@ class BooksLoader(QtCore.QThread):
 
 
 class BooksListPage(Screen):
+    COLUMN_COUNT = 8
+
     def __init__(self, master):
         super().__init__(master=master, title="Books Page")
         self.books = []
@@ -113,7 +116,18 @@ class BooksListPage(Screen):
         self.list_widget: QtWidgets.QTableWidget = self.findChild(QtWidgets.QTableWidget, "tableWidget")
         self.list_widget.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.list_widget.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.list_widget.setColumnCount(4)
+        self.list_widget.setColumnCount(self.COLUMN_COUNT)
+
+        self.list_widget.setHorizontalHeaderLabels([
+            "Cover",
+            "ISBN",
+            "Title",
+            "Author",
+            "Date Published",
+            "Number of Copies",
+            "Locations of Copies",
+            "Info"
+        ])
 
         self.addBookButton = self.findChild(QtWidgets.QPushButton, "addBookButton")
         self.addBookButton.clicked.connect(lambda: self.create_book())
@@ -162,15 +176,31 @@ class BooksListPage(Screen):
         return result
 
     def set_book(self, item: bookman.Book, count):
+        copies = bookman.get_copies_from_book(database, item)
+        locations = ""
+        for copy in copies:
+            locations += str(copy.location.name + "\n")
         image: QtWidgets.QLabel = self.book_pixmaps[count]
         image_widget = QtWidgets.QLabel("")
         image_widget.setPixmap(image)
         image_widget.resize(image.width(), image.height())
         self.list_widget.insertRow(count)
         self.list_widget.setCellWidget(count, 0, image_widget)
-        self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.title))
-        self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.author))
-        self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
+        self.list_widget.setItem(count, 1, QtWidgets.QTableWidgetItem(item.isbn))
+        self.list_widget.setItem(count, 2, QtWidgets.QTableWidgetItem(item.title))
+        self.list_widget.setItem(count, 3, QtWidgets.QTableWidgetItem(item.author.name))
+        self.list_widget.setItem(count, 4, QtWidgets.QTableWidgetItem(item.date_published.strftime("%A %d %B %Y")))
+        self.list_widget.setItem(count, 5, QtWidgets.QTableWidgetItem(f"{str(len(copies))} copies."))
+        self.list_widget.setItem(count, 6, QtWidgets.QTableWidgetItem(locations))
+
+        if item.info_link != "":
+            book_url_button: QtWidgets.QPushButton = QtWidgets.QPushButton(self)
+            book_url_button.setText("Info")
+            url: QtCore.QUrl = QtCore.QUrl(item.info_link)
+            book_url_button.clicked.connect(lambda: QtGui.QDesktopServices.openUrl(url))
+            self.list_widget.setCellWidget(count, 7, book_url_button)
+            self.list_widget.resizeColumnToContents(7)
+            book_url_button.adjustSize()
         self.list_widget.resizeColumnToContents(0)
         self.list_widget.resizeRowToContents(count)
 
