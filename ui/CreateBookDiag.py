@@ -86,7 +86,7 @@ class CopiesDialog(QtWidgets.QDialog):
             location_name = dialog.name.text()
             logging.warning(f"Location name: {location_name}")
         else:
-            logging.warning(f"No location created, response code {res.__class__.__name__}")
+            logging.warning(f"No location created, response code {str(res)}")
             return
         location = add_location(database, location_name)
         self._all_locations.append(location)
@@ -118,6 +118,13 @@ class CreateBookDiag(QtWidgets.QDialog):
         isbn = self.isbn.text()
         isbn = ''.join(ch for ch in isbn if ch.isdigit() or ch == "X")  # Strips all non-digit characters except X.
         num_copies = self.copies_box.value()
+        if num_copies <= 0 or num_copies >= 11:  # This shouldn't be possible as the box has a max in the UI.
+            logging.warning("User tried to submit wrong number of copies somehow.")
+            QtWidgets.QMessageBox.warning(self, "Error", "You must have between 1 and 25 copies.")
+            return
+
+        #  Uses the Google Books API to get details about the book.
+        #  Value error or IsbnInvalidException can both be thrown depending on what kind of error occurs.
         try:
             book = get_from_isbn(str(isbn), database)
         except ValueError:
@@ -129,22 +136,23 @@ class CreateBookDiag(QtWidgets.QDialog):
             logging.critical(msg=f"Book couldn't be created, invalid ISBN. {e.__class__.__name__}: {e.message}")
             return
 
-        try:
-            result: Book = add_book_to_database(book=book, database=database)
-        except BookDatabaseException as e:
-            QtWidgets.QMessageBox.critical(self, "Error", f"{e.__class__.__name__}: {e.message}")
-            logging.critical(msg=f"Book couldn't be added to database: {e.__class__.__name__}: {e.message}")
-            return
-
         locations = get_locations(database)
 
-        dialog = CopiesDialog(self, num_copies, result, locations)
+        dialog = CopiesDialog(self, num_copies, book, locations)
         res = dialog.exec()
         locations = []
         if res == QtWidgets.QDialog.DialogCode.Accepted:
             locations = dialog.location_names
         else:
+            logging.warning(f"Copies dialog cancelled with code {str(res)}.")
             self.reject()
+            return
+
+        try:
+            result: Book = add_book_to_database(book=book, database=database)
+        except BookDatabaseException as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"{e.__class__.__name__}: {e.message}")
+            logging.critical(msg=f"Book couldn't be added to database: {e.__class__.__name__}: {e.message}")
             return
 
         for n, location in enumerate(locations):
