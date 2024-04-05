@@ -1,4 +1,5 @@
 import PyQt6.QtWidgets as QtWidgets
+from PyQt6 import QtGui
 from user_manager import UserType
 import logging
 from .HomePage import HomePage
@@ -16,14 +17,14 @@ class MainWindow(QtWidgets.QTabWidget):
         self._first_time_viewed = True
 
     def showEvent(self, a0, QShowEvent=None):
+        # This is called when the screen is loaded, but might be called on other occasions, but it shouldn't cause bugs.
         logging.warning("showEvent on tab widget")
-        if not self._first_time_viewed:
-            return
         self._first_time_viewed = False
         logging.warning("first time viewed")
         self.set_screens()
 
     def set_screens(self):
+        self.clear()
         self.screens = {
             'Home': HomePage(self._master),
             'Books': BooksListPage(self._master),
@@ -57,5 +58,4 @@ class MainWindow(QtWidgets.QTabWidget):
         pass
 
     def logout(self):
-        self._master.user = None
-        self._master.change_screen(0)
+        self._master.logout()

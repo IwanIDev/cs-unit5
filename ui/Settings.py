@@ -1,3 +1,4 @@
+from user_manager import UserType
 from .screen import Screen
 from pathlib import Path
 from PyQt6 import uic

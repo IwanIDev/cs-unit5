@@ -31,10 +31,9 @@ class App(QtWidgets.QMainWindow):
         self.loading_box = QtWidgets.QDialog()
         self.loading_box.show()
 
-        self._screens = [
-            LoginPage(self),
-            MainWindow(self)
-        ]
+        self._screens = []
+        self.set_screens()
+
         self.stacked_widget = QtWidgets.QStackedWidget()
         for stacked_screen in self._screens:
             self.stacked_widget.addWidget(stacked_screen)
@@ -46,6 +45,13 @@ class App(QtWidgets.QMainWindow):
 
     def change_screen(self, new_screen: int):
         self.stacked_widget.setCurrentIndex(new_screen)
+
+    def set_screens(self):
+        self._screens.clear()
+        self._screens = [
+            LoginPage(self),
+            MainWindow(self)
+        ]
 
     def change_title(self, title: str):
         self.window_title = title
@@ -82,3 +88,8 @@ class App(QtWidgets.QMainWindow):
             }
         self._settings.update(loaded_settings)
         self.reset_title()
+
+    def logout(self):
+        self.user = None
+        self.change_screen(0)
+        self.set_screens()

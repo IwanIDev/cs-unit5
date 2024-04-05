@@ -11,7 +11,7 @@ from datetime import datetime
 class SearchResultsDialog(QtWidgets.QDialog):
     def __init__(self, master, table: QtWidgets.QTableWidget):
         super().__init__(master)
-        self.setFixedSize(800, 600)
+        self.setFixedSize(600, 400)
         self.layout = QtWidgets.QGridLayout()
         self.setLayout(self.layout)
 
