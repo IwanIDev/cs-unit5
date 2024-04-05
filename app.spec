@@ -8,7 +8,11 @@ a = Analysis(
     datas=[('ui/qt', 'ui/qt'), ('database/init.sql', 'database'), ('database.sqlite', '.')],
     hiddenimports=[],
     hookspath=[],
-    hooksconfig={},
+    hooksconfig={
+        "matplotlib": {
+            "backends": ["AGG", "SVG"]
+        }
+    },
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
